@@ -60,7 +60,7 @@ Workflow [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) в р
 | Secret | Пример | Описание |
 |--------|--------|----------|
 | `SELENOID_DEPLOY_HOST` | `selenoid.autotests.cloud` | SSH-хост |
-| `SELENOID_DEPLOY_USER` | `selenoid` | Пользователь в группе `docker` |
+| `SELENOID_DEPLOY_USER` | `selenoid` | Пользователь в группе `docker` (создаётся `bootstrap.sh`) |
 | `SELENOID_DEPLOY_KEY` | `-----BEGIN OPENSSH...` | Приватный SSH-ключ |
 
 Опционально — Variables:
@@ -142,35 +142,51 @@ sudo nginx -t && sudo systemctl reload nginx
 ## Структура на сервере
 
 ```
-/opt/selenoid/          # SELENOID_CONFIG_DIR (рекомендуется)
+/opt/selenoid/          # SELENOID_CONFIG_DIR
   browsers.json
   bin/selenoid
   bin/selenoid-ui
   video/
   logs/
-~/cm                    # бинарник cm
+/home/selenoid/cm       # бинарник cm (только у пользователя selenoid)
 ```
 
-Не используйте `sudo ./cm` — иначе данные окажутся в `/root/.aerokube/`.
+Деплой и `cm` — **только от пользователя `selenoid`**, не от root и не из home других пользователей.
 
 ---
 
 ## Миграция со старого deploy-remote.sh
 
-Старый скрипт с ручным `docker run` и `/root/.aerokube/` **устарел**. Новый путь:
+Старый скрипт с ручным `docker run` и `/root/.aerokube/` **устарел**.
+
+### Одной командой (с `/root/.aerokube` на `/opt/selenoid`)
+
+```bash
+# на сервере, от root
+sudo ./deploy/migrate-to-opt.sh
+```
+
+Скрипт создаёт пользователя `selenoid`, переносит данные, права `selenoid:docker`, `cm` в `/home/selenoid/cm`, затем `deploy.sh`.
+
+### Вручную
 
 ```bash
 sudo docker stop selenoid selenoid-ui && sudo docker rm selenoid selenoid-ui
 sudo DEPLOY_USER=selenoid ./deploy/bootstrap.sh
-# от пользователя selenoid:
+sudo rsync -a /root/.aerokube/selenoid/ /opt/selenoid/
+sudo chown -R selenoid:docker /opt/selenoid
+# от пользователя selenoid (после re-login для docker group):
 SELENOID_CONFIG_DIR=/opt/selenoid ./deploy/deploy.sh
 ```
 
-Видео из старого каталога (если нужны):
+Видео из старого каталога (если не делали migrate-to-opt.sh):
 
 ```bash
-sudo cp -a /root/.aerokube/selenoid/video/* /opt/selenoid/video/ 2>/dev/null || true
+sudo rsync -a /root/.aerokube/selenoid/video/ /opt/selenoid/video/
+sudo chown -R selenoid:docker /opt/selenoid/video
 ```
+
+После проверки legacy можно удалить: `sudo rm -rf /root/.aerokube /root/cm`.
 
 ---
 
