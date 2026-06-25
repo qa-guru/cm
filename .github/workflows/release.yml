@@ -3,6 +3,12 @@ name: release
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release tag (for manual docker push only)'
+        required: false
+        default: 'latest-release'
 
 permissions:
   contents: write
