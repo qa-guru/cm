@@ -41,10 +41,10 @@ echo "=== stop cm-managed services ==="
 "$CM_BIN" selenoid-ui stop -c "$CONFIG_DIR" 2>/dev/null || true
 
 echo "=== update hub (config-dir: $CONFIG_DIR) ==="
-"$CM_BIN" selenoid update -c "$CONFIG_DIR" "${force_args[@]}" "${version_args[@]}"
+"$CM_BIN" selenoid update -c "$CONFIG_DIR" "${version_args[@]}"
 
 echo "=== update UI ==="
-"$CM_BIN" selenoid-ui update -c "$CONFIG_DIR" "${force_args[@]}" "${version_args[@]}"
+"$CM_BIN" selenoid-ui update -c "$CONFIG_DIR" "${version_args[@]}"
 
 echo "=== local status ==="
 curl -sf "http://127.0.0.1:4444/status" | (command -v jq >/dev/null && jq . || cat)
