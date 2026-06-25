@@ -7,6 +7,7 @@ CONFIG_DIR="${SELENOID_CONFIG_DIR:-/opt/selenoid}"
 CM_BIN="${CM_BIN:-$HOME/cm}"
 CM_URL="${CM_URL:-https://github.com/qa-guru/cm/releases/latest/download/cm_linux_amd64}"
 VERSION="${SELENOID_VERSION:-v2.0.2}"
+UI_VERSION="${SELENOID_UI_VERSION:-v2.0.1}"
 GITHUB_OWNER="${GITHUB_OWNER:-qa-guru}"
 
 version_args=()
@@ -28,17 +29,16 @@ if [[ ! -x "$CM_BIN" ]]; then
 fi
 
 download_binary() {
-  local repo="$1" dest="$2"
-  local tag="${VERSION:-latest}"
+  local repo="$1" dest="$2" tag="${3:-${VERSION:-latest}}"
   local url="https://github.com/${GITHUB_OWNER}/${repo}/releases/download/${tag}/${repo}_linux_amd64"
   echo "Downloading ${repo} ${tag} → ${dest}"
   curl -fsSL "$url" -o "$dest"
   chmod 755 "$dest"
 }
 
-echo "=== download hub binaries (${VERSION:-latest}) ==="
-download_binary selenoid "$CONFIG_DIR/bin/selenoid"
-download_binary selenoid-ui "$CONFIG_DIR/bin/selenoid-ui"
+echo "=== download hub binaries (selenoid ${VERSION:-latest}, selenoid-ui ${UI_VERSION:-latest}) ==="
+download_binary selenoid "$CONFIG_DIR/bin/selenoid" "$VERSION"
+download_binary selenoid-ui "$CONFIG_DIR/bin/selenoid-ui" "$UI_VERSION"
 
 echo "=== stop legacy containers ==="
 docker stop selenoid selenoid-ui 2>/dev/null || true
