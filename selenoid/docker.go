@@ -52,8 +52,8 @@ const (
 	edge                    = "MicrosoftEdge"
 	opera                   = "opera"
 	tag_1216                = "12.16"
-	selenoidImage           = "aerokube/selenoid"
-	selenoidUIImage         = "aerokube/selenoid-ui"
+	selenoidImage           = selenoidWrapperImage
+	selenoidUIImage         = selenoidUIWrapperImage
 	videoRecorderImage      = "selenoid/video-recorder:latest-release"
 	selenoidContainerName   = "selenoid"
 	ggrUIContainerName      = "ggr-ui"
@@ -77,7 +77,13 @@ type DockerConfigurator struct {
 	UserNSAware
 	LogsAware
 	GracefulAware
-	LastVersions int
+	Forceable
+	GithubBaseUrl        string
+	OS                   string
+	Arch                 string
+	SelenoidBinaryPath   string
+	SelenoidUIBinaryPath string
+	LastVersions         int
 	Pull         bool
 	RegistryUrl  string
 	BrowsersJson string
@@ -104,6 +110,12 @@ func NewDockerConfigurator(config *LifecycleConfig) (*DockerConfigurator, error)
 		UserNSAware:            UserNSAware{UserNS: config.UserNS},
 		LogsAware:              LogsAware{DisableLogs: config.DisableLogs},
 		GracefulAware:          GracefulAware{Graceful: config.Graceful, GracefulTimeout: config.GracefulTimeout},
+		Forceable:              Forceable{Force: config.Force},
+		GithubBaseUrl:          config.GithubBaseUrl,
+		OS:                     config.OS,
+		Arch:                   config.Arch,
+		SelenoidBinaryPath:     config.SelenoidBinary,
+		SelenoidUIBinaryPath:   config.SelenoidUIBinary,
 		RegistryUrl:            config.RegistryUrl,
 		BrowsersJson:           config.BrowsersJson,
 		LastVersions:           config.LastVersions,
@@ -297,7 +309,7 @@ func (c *DockerConfigurator) IsDownloaded() bool {
 }
 
 func (c *DockerConfigurator) getSelenoidImage() *image.Summary {
-	return c.getImage(selenoidImage, c.Version)
+	return c.getImage(selenoidWrapperImage, wrapperImageTag)
 }
 
 func (c *DockerConfigurator) IsUIDownloaded() bool {
@@ -305,7 +317,7 @@ func (c *DockerConfigurator) IsUIDownloaded() bool {
 }
 
 func (c *DockerConfigurator) getSelenoidUIImage() *image.Summary {
-	return c.getImage(selenoidUIImage, c.Version)
+	return c.getImage(selenoidUIWrapperImage, wrapperImageTag)
 }
 
 func (c *DockerConfigurator) getImage(name string, version string) *image.Summary {
@@ -338,11 +350,29 @@ func findMatchingImage(images []image.Summary, name string, version string) *ima
 }
 
 func (c *DockerConfigurator) Download() (string, error) {
-	return c.downloadImpl(selenoidImage, c.Version, "failed to pull Selenoid image")
+	ref, err := c.downloadWrapperImage(selenoidWrapperImage, "failed to pull Selenoid wrapper image")
+	if err != nil {
+		return "", err
+	}
+	if err := c.downloadSelenoidBinary(); err != nil {
+		return "", err
+	}
+	return ref, nil
 }
 
 func (c *DockerConfigurator) DownloadUI() (string, error) {
-	return c.downloadImpl(selenoidUIImage, c.Version, "failed to pull Selenoid UI image")
+	ref, err := c.downloadWrapperImage(selenoidUIWrapperImage, "failed to pull Selenoid UI wrapper image")
+	if err != nil {
+		return "", err
+	}
+	if err := c.downloadSelenoidUIBinary(); err != nil {
+		return "", err
+	}
+	return ref, nil
+}
+
+func (c *DockerConfigurator) downloadWrapperImage(imageName, errorMessage string) (string, error) {
+	return c.downloadImpl(imageName, wrapperImageTag, errorMessage)
 }
 
 func (c *DockerConfigurator) downloadImpl(imageName string, version string, errorMessage string) (string, error) {
@@ -380,44 +410,9 @@ func (c *DockerConfigurator) Configure() (*SelenoidConfig, error) {
 		return nil, fmt.Errorf("failed to create output directory: %v", err)
 	}
 	if c.BrowsersJson != "" {
-		return c.syncWithConfig()
+		return c.syncBrowsersFromFile(c.BrowsersJson)
 	}
-
-	cfg := c.createConfig()
-	data, err := json.MarshalIndent(cfg, "", "    ")
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal json: %v", err)
-	}
-	return &cfg, os.WriteFile(getSelenoidConfigPath(c.ConfigDir), data, 0644)
-}
-
-func (c *DockerConfigurator) syncWithConfig() (*SelenoidConfig, error) {
-	c.Titlef(`Requested to sync configuration from "%v"...`, color.GreenString(c.BrowsersJson))
-	data, err := os.ReadFile(c.BrowsersJson)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read browsers.json from %s: %v", c.BrowsersJson, err)
-	}
-	var cfg SelenoidConfig
-	err = json.Unmarshal(data, &cfg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse browsers.json from %s: %v", c.BrowsersJson, err)
-	}
-	if c.DownloadNeeded {
-		for _, versions := range cfg {
-			for _, version := range versions.Versions {
-				if ref, ok := version.Image.(string); ok {
-					ctx := context.Background()
-					if !c.pullImage(ctx, ref) {
-						return nil, fmt.Errorf("failed to pull image %s from browsers.json file %s", ref, c.BrowsersJson)
-					}
-				} else {
-					c.Pointf("Skipping non-Docker image specification: %v", version.Image)
-				}
-			}
-		}
-		c.pullVideoRecorderImage()
-	}
-	return &cfg, os.WriteFile(getSelenoidConfigPath(c.ConfigDir), data, 0644)
+	return c.configureEmbeddedBrowsers()
 }
 
 func (c *DockerConfigurator) createConfig() SelenoidConfig {
@@ -751,6 +746,11 @@ func (c *DockerConfigurator) Start() error {
 		fmt.Sprintf("%s:/opt/selenoid/video:Z", videoConfigDir),
 		fmt.Sprintf("%s:/opt/selenoid/logs:Z", logsConfigDir),
 	}
+	binaryPath := c.resolvedSelenoidBinaryPath()
+	if !fileExists(binaryPath) {
+		return fmt.Errorf("selenoid binary not found at %s: run \"cm selenoid download\" first", binaryPath)
+	}
+	volumes = append(volumes, fmt.Sprintf("%s:%s:ro", binaryPath, selenoidBinaryMountPath))
 	const dockerSocket = "/var/run/docker.sock"
 	if isWindows() {
 		//With two slashes. See https://stackoverflow.com/questions/36765138/bind-to-docker-socket-on-windows
@@ -778,6 +778,9 @@ func (c *DockerConfigurator) Start() error {
 	}
 	if !contains(cmd, "-container-network") {
 		cmd = append(cmd, "-container-network", networkName)
+	}
+	if len(cmd) == 0 || cmd[0] != selenoidBinaryMountPath {
+		cmd = append([]string{selenoidBinaryMountPath}, cmd...)
 	}
 
 	overrideEnv := strings.Fields(c.Env)
@@ -902,12 +905,32 @@ containers:
 		c.Errorf("Neither Selenoid nor Ggr UI is started. Selenoid UI may not work.")
 	}
 
+	binaryPath := c.resolvedSelenoidUIBinaryPath()
+	if !fileExists(binaryPath) {
+		return fmt.Errorf("selenoid ui binary not found at %s: run \"cm selenoid-ui download\" first", binaryPath)
+	}
+	volumeConfigDir := getVolumeConfigDir(c.ConfigDir, selenoidConfigDirElem)
+	volumes := []string{
+		fmt.Sprintf("%s:/etc/selenoid:ro", volumeConfigDir),
+		fmt.Sprintf("%s:%s:ro", binaryPath, selenoidUIBinaryMountPath),
+	}
+	if !contains(cmd, "-browsers-conf") && !contains(cmd, "--browsers-conf") {
+		cmd = append(cmd, "-browsers-conf", "/etc/selenoid/browsers.json")
+	}
+	if !contains(cmd, "-listen") && !contains(cmd, "--listen") {
+		cmd = append(cmd, fmt.Sprintf("-listen=:%d", c.Port))
+	}
+	if len(cmd) == 0 || cmd[0] != selenoidUIBinaryMountPath {
+		cmd = append([]string{selenoidUIBinaryMountPath}, cmd...)
+	}
+
 	overrideEnv := strings.Fields(c.Env)
 	cfg := &containerConfig{
 		Name:        selenoidUIContainerName,
 		Image:       img,
 		HostPort:    c.Port,
 		ServicePort: UIDefaultPort,
+		Volumes:     volumes,
 		Network:     networkName,
 		Cmd:         cmd,
 		OverrideEnv: overrideEnv,

@@ -35,6 +35,8 @@ var (
 	uiPort          uint16
 	userNS          string
 	disableLogs     bool
+	selenoidBinary  string
+	selenoidUIBinary string
 )
 
 func init() {
@@ -101,7 +103,7 @@ func initFlags() {
 		selenoidCleanupUICmd,
 		selenoidUIStatusCmd,
 	} {
-		c.Flags().StringVarP(&uiConfigDir, "config-dir", "c", selenoid.GetSelenoidUIConfigDir(), "directory to save files")
+		c.Flags().StringVarP(&uiConfigDir, "config-dir", "c", selenoid.GetSelenoidConfigDir(), "directory to save files")
 		c.Flags().Uint16VarP(&uiPort, "port", "p", selenoid.UIDefaultPort, "override listen port")
 	}
 
@@ -146,7 +148,9 @@ func initFlags() {
 		c.Flags().IntVarP(&lastVersions, "last-versions", "l", 2, "process only last N versions (Docker only)")
 		c.Flags().IntVarP(&shmSize, "shm-size", "z", 0, "add shmSize sized in megabytes (Docker only)")
 		c.Flags().IntVarP(&tmpfs, "tmpfs", "t", 0, "add tmpfs volume sized in megabytes (Docker only)")
-		c.Flags().BoolVarP(&vnc, "vnc", "s", false, "download containers with VNC support (Docker only)")
+		c.Flags().BoolVarP(&vnc, "vnc", "s", false, "deprecated: all browser images already include VNC")
+		c.Flags().StringVar(&selenoidBinary, "selenoid-binary", "", "path to Selenoid binary (default: download from qa-guru/selenoid release)")
+		c.Flags().StringVar(&selenoidUIBinary, "selenoid-ui-binary", "", "path to Selenoid UI binary (default: download from qa-guru/selenoid-ui release)")
 	}
 	for _, c := range []*cobra.Command{
 		selenoidDownloadCmd,
@@ -203,6 +207,9 @@ func createLifecycle(configDir string, port uint16) (*selenoid.Lifecycle, error)
 		VNC:          vnc,
 		UserNS:       userNS,
 
+		SelenoidBinary:   selenoidBinary,
+		SelenoidUIBinary: selenoidUIBinary,
+
 		DriversInfoUrl: driversInfoUrl,
 		OS:             operatingSystem,
 		Arch:           arch,
@@ -220,5 +227,5 @@ var selenoidCmd = &cobra.Command{
 }
 
 func stderr(format string, a ...interface{}) {
-	_, _ = fmt.Fprintf(os.Stderr, format, a)
+	_, _ = fmt.Fprintf(os.Stderr, format, a...)
 }

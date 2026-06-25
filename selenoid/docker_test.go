@@ -34,7 +34,7 @@ func setImageName(name string) {
 }
 
 func resetImageName() {
-	setImageName("docker.io/" + selenoidImage)
+	setImageName("docker.io/" + selenoidWrapperImage + ":" + wrapperImageTag)
 }
 
 func setContainerName(name string) {
@@ -143,7 +143,7 @@ func mux() http.Handler {
 			
 			    "Id": "sha256:e216a057b1cb1efc11f8a268f37ef62083e70b1b38323ba252e25ac88904a7e8",
 			    "ParentId": "",
-			    "RepoTags": [ "%s:latest" ],
+			    "RepoTags": [ "%s" ],
 			    "RepoDigests": [],
 			    "Created": 1474925151,
 			    "Size": 103579269,
@@ -312,18 +312,10 @@ func testConfigure(t *testing.T, download bool) {
 	withTmpDir(t, "test-docker-configure", func(t *testing.T, dir string) {
 
 		lcConfig := LifecycleConfig{
-			ConfigDir:    dir,
-			RegistryUrl:  mockDockerServer.URL,
-			Download:     download,
-			Quiet:        false,
-			LastVersions: 2,
-			Tmpfs:        512,
-			ShmSize:      256,
-			Browsers:     "firefox:>45.0;opera;android;MicrosoftEdge",
-			Args:         "-limit 42",
-			VNC:          true,
-			Env:          testEnv,
-			BrowserEnv:   testEnv,
+			ConfigDir:   dir,
+			RegistryUrl: mockDockerServer.URL,
+			Download:    download,
+			Quiet:       false,
 		}
 		c, err := NewDockerConfigurator(&lcConfig)
 		assert.NoError(t, err)
@@ -334,84 +326,10 @@ func testConfigure(t *testing.T, download bool) {
 		assert.NotNil(t, cfgPointer)
 
 		cfg := *cfgPointer
-		assert.Len(t, cfg, 4)
-
-		firefoxVersions, hasFirefoxKey := cfg["firefox"]
-		assert.True(t, hasFirefoxKey, true)
-		assert.NotNil(t, firefoxVersions)
-
-		tmpfsMap := make(map[string]string)
-		tmpfsMap["/tmp"] = "size=512m"
-
-		correctFFBrowsers := make(map[string]*config.Browser)
-		correctFFBrowsers["46.0"] = &config.Browser{
-			Image:   c.getFullyQualifiedImageRef("selenoid/firefox:46.0"),
-			Port:    "4444",
-			Path:    "/wd/hub",
-			Tmpfs:   tmpfsMap,
-			ShmSize: 268435456,
-			Env:     []string{testEnv},
-		}
-		assert.Equal(t, firefoxVersions, config.Versions{
-			Default:  "46.0",
-			Versions: correctFFBrowsers,
-		})
-
-		operaVersions, hasOperaKey := cfg["opera"]
-		assert.True(t, hasOperaKey)
-		assert.NotNil(t, operaVersions)
-		assert.Equal(t, operaVersions.Default, "44.0")
-
-		correctOperaBrowsers := make(map[string]*config.Browser)
-		correctOperaBrowsers["44.0"] = &config.Browser{
-			Image:   c.getFullyQualifiedImageRef("selenoid/opera:44.0"),
-			Port:    "4444",
-			Path:    "/",
-			Tmpfs:   tmpfsMap,
-			ShmSize: 268435456,
-			Env:     []string{testEnv},
-		}
-		assert.Equal(t, operaVersions, config.Versions{
-			Default:  "44.0",
-			Versions: correctOperaBrowsers,
-		})
-
-		androidVersions, hasAndroidKey := cfg["android"]
-		assert.True(t, hasAndroidKey, true)
-		assert.NotNil(t, androidVersions)
-
-		correctAndroidBrowsers := make(map[string]*config.Browser)
-		correctAndroidBrowsers["10.0"] = &config.Browser{
-			Image:   c.getFullyQualifiedImageRef("selenoid/android:10.0"),
-			Port:    "4444",
-			Path:    "/wd/hub",
-			Tmpfs:   tmpfsMap,
-			ShmSize: 268435456,
-			Env:     []string{testEnv},
-		}
-		assert.Equal(t, androidVersions, config.Versions{
-			Default:  "10.0",
-			Versions: correctAndroidBrowsers,
-		})
-
-		edgeVersions, hasEdgeKey := cfg["MicrosoftEdge"]
-		assert.True(t, hasEdgeKey)
-		assert.NotNil(t, edgeVersions)
-
-		correctEdgeBrowsers := make(map[string]*config.Browser)
-		correctEdgeBrowsers["88.0"] = &config.Browser{
-			Image:   c.getFullyQualifiedImageRef("browsers/edge:88.0"),
-			Port:    "4444",
-			Path:    "/",
-			Tmpfs:   tmpfsMap,
-			ShmSize: 268435456,
-			Env:     []string{testEnv},
-		}
-		assert.Equal(t, edgeVersions, config.Versions{
-			Default:  "88.0",
-			Versions: correctEdgeBrowsers,
-		})
-
+		assert.Len(t, cfg, 5)
+		assert.Contains(t, cfg, "chrome")
+		assert.Contains(t, cfg, "chromium")
+		assert.Contains(t, cfg, "firefox-playwright")
 	})
 }
 
@@ -455,17 +373,25 @@ func TestSyncWithConfig(t *testing.T) {
 }
 
 func TestStartStopContainer(t *testing.T) {
-	c, err := NewDockerConfigurator(&LifecycleConfig{
-		RegistryUrl: mockDockerServer.URL,
-		Port:        DefaultPort,
-		Version:     Latest,
-		UserNS:      "host",
+	withTmpDir(t, "test-start-stop", func(t *testing.T, dir string) {
+		selenoidBin := filepath.Join(dir, binDirName, "selenoid")
+		assert.NoError(t, os.MkdirAll(filepath.Dir(selenoidBin), 0755))
+		assert.NoError(t, os.WriteFile(selenoidBin, []byte{0}, 0755))
+		assert.NoError(t, os.WriteFile(getSelenoidConfigPath(dir), []byte("{}"), 0644))
+
+		c, err := NewDockerConfigurator(&LifecycleConfig{
+			ConfigDir:      dir,
+			RegistryUrl:    mockDockerServer.URL,
+			Port:           DefaultPort,
+			SelenoidBinary: selenoidBin,
+			UserNS:         "host",
+		})
+		assert.NoError(t, err)
+		assert.True(t, c.IsRunning())
+		assert.NoError(t, c.Start())
+		c.Status()
+		assert.NoError(t, c.Stop())
 	})
-	assert.NoError(t, err)
-	assert.True(t, c.IsRunning())
-	assert.NoError(t, c.Start())
-	c.Status()
-	assert.NoError(t, c.Stop())
 }
 
 func TestStartStopUIContainer(t *testing.T) {
@@ -474,50 +400,73 @@ func TestStartStopUIContainer(t *testing.T) {
 		resetContainerName()
 		resetPort()
 	}()
-	c, err := NewDockerConfigurator(&LifecycleConfig{
-		RegistryUrl: mockDockerServer.URL,
-		Port:        UIDefaultPort,
+	withTmpDir(t, "test-start-stop-ui", func(t *testing.T, dir string) {
+		uiBin := filepath.Join(dir, binDirName, "selenoid-ui")
+		assert.NoError(t, os.MkdirAll(filepath.Dir(uiBin), 0755))
+		assert.NoError(t, os.WriteFile(uiBin, []byte{0}, 0755))
+		assert.NoError(t, os.WriteFile(getSelenoidConfigPath(dir), []byte("{}"), 0644))
+
+		c, err := NewDockerConfigurator(&LifecycleConfig{
+			ConfigDir:        dir,
+			RegistryUrl:      mockDockerServer.URL,
+			Port:             UIDefaultPort,
+			SelenoidUIBinary: uiBin,
+		})
+		assert.NoError(t, err)
+		setContainerName(selenoidUIContainerName)
+		setImageName("docker.io/" + selenoidUIWrapperImage + ":" + wrapperImageTag)
+		setPort(UIDefaultPort)
+		assert.True(t, c.IsUIRunning())
+		assert.NoError(t, c.StartUI())
+		c.UIStatus()
+		assert.NoError(t, c.StopUI())
 	})
-	assert.NoError(t, err)
-	setContainerName(selenoidUIContainerName)
-	setImageName(selenoidUIImage)
-	setPort(UIDefaultPort)
-	assert.True(t, c.IsUIRunning())
-	assert.NoError(t, c.StartUI())
-	c.UIStatus()
-	assert.NoError(t, c.StopUI())
 }
 
 func TestDownload(t *testing.T) {
-	c, err := NewDockerConfigurator(&LifecycleConfig{
-		RegistryUrl: mockDockerServer.URL,
-		Quiet:       true,
-		Version:     Latest,
+	withTmpDir(t, "test-download", func(t *testing.T, dir string) {
+		selenoidBin := filepath.Join(dir, binDirName, "selenoid")
+		assert.NoError(t, os.MkdirAll(filepath.Dir(selenoidBin), 0755))
+		assert.NoError(t, os.WriteFile(selenoidBin, []byte{0}, 0755))
+
+		c, err := NewDockerConfigurator(&LifecycleConfig{
+			ConfigDir:      dir,
+			RegistryUrl:    mockDockerServer.URL,
+			Quiet:          true,
+			SelenoidBinary: selenoidBin,
+		})
+		assert.NoError(t, err)
+		assert.True(t, c.IsDownloaded())
+		ref, err := c.Download()
+		assert.NoError(t, err)
+		assert.NotNil(t, ref)
+		assert.NoError(t, c.PrintArgs())
 	})
-	assert.NoError(t, err)
-	assert.True(t, c.IsDownloaded())
-	ref, err := c.Download()
-	assert.NoError(t, err)
-	assert.NotNil(t, ref)
-	assert.NoError(t, c.PrintArgs())
 }
 
 func TestDownloadUI(t *testing.T) {
 	defer func() {
 		resetImageName()
 	}()
-	c, err := NewDockerConfigurator(&LifecycleConfig{
-		RegistryUrl: mockDockerServer.URL,
-		Quiet:       true,
-		Version:     Latest,
+	withTmpDir(t, "test-download-ui", func(t *testing.T, dir string) {
+		uiBin := filepath.Join(dir, binDirName, "selenoid-ui")
+		assert.NoError(t, os.MkdirAll(filepath.Dir(uiBin), 0755))
+		assert.NoError(t, os.WriteFile(uiBin, []byte{0}, 0755))
+
+		c, err := NewDockerConfigurator(&LifecycleConfig{
+			ConfigDir:        dir,
+			RegistryUrl:      mockDockerServer.URL,
+			Quiet:            true,
+			SelenoidUIBinary: uiBin,
+		})
+		setImageName("docker.io/" + selenoidUIWrapperImage + ":" + wrapperImageTag)
+		assert.NoError(t, err)
+		assert.True(t, c.IsUIDownloaded())
+		ref, err := c.DownloadUI()
+		assert.NoError(t, err)
+		assert.NotNil(t, ref)
+		assert.NoError(t, c.PrintUIArgs())
 	})
-	setImageName(selenoidUIImage)
-	assert.NoError(t, err)
-	assert.True(t, c.IsUIDownloaded())
-	ref, err := c.DownloadUI()
-	assert.NoError(t, err)
-	assert.NotNil(t, ref)
-	assert.NoError(t, c.PrintUIArgs())
 }
 
 func TestGetSelenoidImage(t *testing.T) {
@@ -531,7 +480,7 @@ func TestGetSelenoidImage(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.NotNil(t, c.getSelenoidImage())
-	setImageName(selenoidUIImage)
+	setImageName("docker.io/" + selenoidUIWrapperImage + ":" + wrapperImageTag)
 	assert.Nil(t, c.getSelenoidImage())
 }
 

@@ -6,13 +6,11 @@ import (
 	"bufio"
 	"bytes"
 	"compress/gzip"
-	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -24,7 +22,6 @@ import (
 
 	"github.com/aerokube/selenoid/config"
 	"github.com/fatih/color"
-	"github.com/google/go-github/github"
 	"github.com/mitchellh/go-ps"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -34,7 +31,7 @@ import (
 const (
 	zipMagicHeader  = "504b"
 	gzipMagicHeader = "1f8b"
-	owner           = "aerokube"
+	owner           = githubOwner
 	selenoidRepo    = "selenoid"
 	selenoidUIRepo  = "selenoid-ui"
 )
@@ -224,38 +221,7 @@ func (d *DriversConfigurator) getSelenoidUIUrl() (string, error) {
 }
 
 func (d *DriversConfigurator) getUrl(repo string, missingBinaryError error) (string, error) {
-	ctx := context.Background()
-	client := github.NewClient(nil)
-	if d.GithubBaseUrl != "" {
-		u, err := url.Parse(d.GithubBaseUrl)
-		if err != nil {
-			return "", fmt.Errorf("invalid Github base url [%s]: %v", d.GithubBaseUrl, err)
-		}
-		client.BaseURL = u
-	}
-	var release *github.RepositoryRelease
-	var err error
-	if d.Version != Latest {
-		release, _, err = client.Repositories.GetReleaseByTag(ctx, owner, repo, d.Version)
-	} else {
-		release, _, err = client.Repositories.GetLatestRelease(ctx, owner, repo)
-	}
-
-	if err != nil {
-		return "", err
-	}
-
-	if release == nil {
-		return "", fmt.Errorf("unknown release: %s", d.Version)
-	}
-
-	for _, asset := range release.Assets {
-		assetName := *(asset.Name)
-		if strings.Contains(assetName, d.OS) && strings.Contains(assetName, d.Arch) {
-			return *(asset.BrowserDownloadURL), nil
-		}
-	}
-	return "", missingBinaryError
+	return getGithubReleaseAssetURL(githubOwner, repo, d.Version, d.OS, d.Arch, d.GithubBaseUrl)
 }
 
 func (d *DriversConfigurator) downloadFile(url string, outputPath string) (string, error) {

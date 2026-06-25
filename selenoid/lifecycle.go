@@ -35,6 +35,9 @@ type LifecycleConfig struct {
 	VNC          bool
 	UserNS       string
 
+	SelenoidBinary   string
+	SelenoidUIBinary string
+
 	// Drivers specific
 	UseDrivers     bool
 	DriversInfoUrl string
