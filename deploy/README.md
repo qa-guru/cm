@@ -121,15 +121,16 @@ Playwright требует WebSocket-прокси **и** (рекомендует�
 | [`nginx-selenoid.conf`](nginx-selenoid.conf) | полный пример vhost с auth на `/wd/hub` и `/playwright/` |
 | [`nginx-playwright-snippet.conf`](nginx-playwright-snippet.conf) | только `location /playwright/` с auth + WebSocket |
 
-На сервере сейчас auth есть **только** на `/wd/hub`. Чтобы закрыть Playwright:
+На сервере сейчас auth есть **только** на `/wd/hub`. Чтобы закрыть Playwright **без правки блока `/wd/hub`**:
 
 ```bash
-# если htpasswd ещё нет (user1 / 1234):
-sudo htpasswd -cb /etc/nginx/selenoid.htpasswd user1 1234
-
-# добавить auth_basic в location /playwright/ — см. nginx-selenoid.conf
-sudo nginx -t && sudo systemctl reload nginx
+curl -fsSL https://raw.githubusercontent.com/qa-guru/cm/master/deploy/nginx-enable-playwright-auth.sh -o /tmp/nginx-enable-playwright-auth.sh
+chmod +x /tmp/nginx-enable-playwright-auth.sh
+sudo /tmp/nginx-enable-playwright-auth.sh --dry-run   # сначала посмотреть diff
+sudo /tmp/nginx-enable-playwright-auth.sh             # применить
 ```
+
+Скрипт читает путь к `htpasswd` из существующего `location /wd/hub`, добавляет auth только в `/playwright/`, делает backup и `nginx -t` перед reload.
 
 ---
 
