@@ -59,9 +59,9 @@ Workflow [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) в р
 
 | Secret | Пример | Описание |
 |--------|--------|----------|
-| `SELENOID_DEPLOY_HOST` | `selenoid.autotests.cloud` | SSH-хост |
-| `SELENOID_DEPLOY_USER` | `selenoid` | Пользователь в группе `docker` (создаётся `bootstrap.sh`) |
-| `SELENOID_DEPLOY_KEY` | `-----BEGIN OPENSSH...` | Приватный SSH-ключ |
+| `SELENOID_DEPLOY_HOST` | `136.243.89.21` | SSH-хост (**IP сервера**, не CNAME — DNS может указывать на прокси) |
+| `SELENOID_DEPLOY_USER` | `selenoid` | Пользователь в группе `docker` |
+| `SELENOID_DEPLOY_KEY` | ed25519 private key | Ключ только для Actions → `/home/selenoid/.ssh/authorized_keys` |
 
 Опционально — Variables:
 
