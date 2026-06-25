@@ -124,13 +124,13 @@ SELENOID_VERSION=v2.0.2 ./deploy/deploy.sh
 
 | Порт | `location` | Куда | Auth |
 |------|------------|------|------|
-| 443 | `/wd/hub/` | `127.0.0.1:4444` | `auth_basic 'test'`, `/etc/nginx/.htpasswd` |
-| 443 | `/playwright/` | `127.0.0.1:4444` | то же |
-| 443 | `/` | `127.0.0.1:8080` (UI) | нет |
-| 443 | `/status` | `127.0.0.1:4444` | `auth_basic off` |
-| 4445 | `/` | `127.0.0.1:4444` | `auth_basic 'API'`, тот же htpasswd |
+| 443 | `/` | `127.0.0.1:8080` (UI → hub) | **да** — диалог при открытии UI; дальше XHR и WebSocket с теми же credentials |
+| 443 | `/status` | `127.0.0.1:4444` | нет |
+| 4445 | `/` | `127.0.0.1:4444` (hub) | **да** — CI / Playwright с заголовком `Authorization` |
 
-Справочные файлы: [`nginx-selenoid.conf`](nginx-selenoid.conf), [`nginx-playwright-snippet.conf`](nginx-playwright-snippet.conf).
+Не проксируйте `/wd/hub` и `/playwright/` напрямую на hub:443 — иначе WebSocket Playwright не покажет basic auth в браузере. Весь трафик UI — через `location /` на selenoid-ui.
+
+Справочные файлы: [`nginx-selenoid.conf`](nginx-selenoid.conf), [`sync-nginx.sh`](sync-nginx.sh).
 
 ### Очистка видео на сервере
 
