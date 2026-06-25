@@ -2,7 +2,7 @@ package selenoid
 
 const (
 	githubOwner            = "qa-guru"
-	selenoidWrapperImage   = "aerokube/selenoid"
+	selenoidWrapperImage   = "qaguru/selenoid"
 	selenoidUIWrapperImage = "qaguru/selenoid-ui"
 	wrapperImageTag        = "latest-release"
 

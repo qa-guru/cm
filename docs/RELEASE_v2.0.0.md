@@ -20,7 +20,7 @@ cm selenoid-ui start -v v2.0.0
 3. Скачивает бинарники hub и UI из GitHub Releases `qa-guru/selenoid` и `qa-guru/selenoid-ui`
 4. Запускает Docker-контейнеры с примонтированными бинарниками qa-guru
 
-Обёрточные образы: `aerokube/selenoid:latest-release`, `qaguru/selenoid-ui:latest-release`.
+Обёрточный образ UI: `qaguru/selenoid-ui:latest-release`. Hub в production — нативный бинарник qa-guru/selenoid; при `cm selenoid start` в Docker — `qaguru/selenoid:latest-release`.
 
 ---
 

@@ -780,7 +780,7 @@ func (c *DockerConfigurator) Start() error {
 	if !contains(cmd, "-container-network") {
 		cmd = append(cmd, "-container-network", networkName)
 	}
-	// aerokube/selenoid image sets ENTRYPOINT to /usr/bin/selenoid; prepending the
+	// qaguru/selenoid image sets ENTRYPOINT to /usr/bin/selenoid; prepending the
 	// binary again makes Go flag.Parse stop at the duplicate argv and ignore flags.
 
 	overrideEnv := strings.Fields(c.Env)
@@ -930,7 +930,7 @@ containers:
 	if !contains(cmd, "-listen") && !contains(cmd, "--listen") {
 		cmd = append(cmd, fmt.Sprintf("-listen=:%d", c.Port))
 	}
-	// aerokube/selenoid-ui image sets ENTRYPOINT to /selenoid-ui; prepending the
+	// qaguru/selenoid-ui image sets ENTRYPOINT to /selenoid-ui; prepending the
 	// binary again makes Go flag.Parse stop at the duplicate argv and ignore flags.
 
 	overrideEnv := strings.Fields(c.Env)

@@ -63,14 +63,14 @@ func mux() http.Handler {
 		},
 	))
 
-	mux.HandleFunc("/v2/aerokube/selenoid/tags/list", http.HandlerFunc(
+	mux.HandleFunc("/v2/qaguru/selenoid/tags/list", http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Content-Type", "application/json")
 			_, _ = fmt.Fprintln(w, `{"name":"selenoid", "tags": ["1.4.0", "1.4.1"]}`)
 		},
 	))
 
-	mux.HandleFunc("/v2/aerokube/selenoid-ui/tags/list", http.HandlerFunc(
+	mux.HandleFunc("/v2/qaguru/selenoid-ui/tags/list", http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Content-Type", "application/json")
 			_, _ = fmt.Fprintln(w, `{"name":"selenoid-ui", "tags": ["1.5.2"]}`)
@@ -489,17 +489,17 @@ func TestFindMatchingImage(t *testing.T) {
 	var (
 		selenoid141 = image.Summary{
 			ID:       "1",
-			RepoTags: []string{"aerokube/selenoid:1.4.1"},
+			RepoTags: []string{"qaguru/selenoid:1.4.1"},
 			Created:  100,
 		}
 		selenoid143 = image.Summary{
 			ID:       "3",
-			RepoTags: []string{"aerokube/selenoid:1.4.3"},
+			RepoTags: []string{"qaguru/selenoid:1.4.3"},
 			Created:  300,
 		}
 		selenoid120CustomRegistry = image.Summary{
 			ID:       "4",
-			RepoTags: []string{"my-registry.com:443/aerokube/selenoid:1.2.0"},
+			RepoTags: []string{"my-registry.com:443/qaguru/selenoid:1.2.0"},
 			Created:  100,
 		}
 	)
@@ -507,7 +507,7 @@ func TestFindMatchingImage(t *testing.T) {
 		selenoid141,
 		{
 			ID:       "2",
-			RepoTags: []string{"aerokube/selenoid-ui:1.5.1"},
+			RepoTags: []string{"qaguru/selenoid-ui:1.5.1"},
 			Created:  200, //Intentionally using small timestamps
 		},
 		selenoid143,
@@ -515,25 +515,25 @@ func TestFindMatchingImage(t *testing.T) {
 	}
 
 	assert.Nil(t, findMatchingImage(images, "unknown-image-name", Latest))
-	assert.Nil(t, findMatchingImage(images, "aerokube/selenoid", "missing-version"))
+	assert.Nil(t, findMatchingImage(images, "qaguru/selenoid", "missing-version"))
 
-	foundSelenoid141 := findMatchingImage(images, "aerokube/selenoid", "1.4.1")
+	foundSelenoid141 := findMatchingImage(images, "qaguru/selenoid", "1.4.1")
 	assert.NotNil(t, foundSelenoid141)
 	assert.Equal(t, *foundSelenoid141, selenoid141)
 
-	foundSelenoidEmpty := findMatchingImage(images, "aerokube/selenoid", "")
+	foundSelenoidEmpty := findMatchingImage(images, "qaguru/selenoid", "")
 	assert.NotNil(t, foundSelenoidEmpty)
 	assert.Equal(t, *foundSelenoidEmpty, selenoid143)
 
-	foundSelenoidLatest := findMatchingImage(images, "aerokube/selenoid", Latest)
+	foundSelenoidLatest := findMatchingImage(images, "qaguru/selenoid", Latest)
 	assert.NotNil(t, foundSelenoidLatest)
 	assert.Equal(t, *foundSelenoidLatest, selenoid143)
 
-	foundSelenoidCustomRegistry := findMatchingImage(images, "my-registry.com:443/aerokube/selenoid", "1.2.0")
+	foundSelenoidCustomRegistry := findMatchingImage(images, "my-registry.com:443/qaguru/selenoid", "1.2.0")
 	assert.NotNil(t, foundSelenoidCustomRegistry, nil)
 	assert.Equal(t, *foundSelenoidCustomRegistry, selenoid120CustomRegistry)
 
-	foundSelenoidWithoutRegistry := findMatchingImage(images, "aerokube/selenoid", "1.2.0")
+	foundSelenoidWithoutRegistry := findMatchingImage(images, "qaguru/selenoid", "1.2.0")
 	assert.NotNil(t, foundSelenoidWithoutRegistry, nil)
 	assert.Equal(t, *foundSelenoidWithoutRegistry, selenoid120CustomRegistry)
 }
