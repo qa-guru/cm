@@ -2,7 +2,7 @@
 
 Публичный Selenoid для курсов и примеров: **Selenium WebDriver** + **Playwright WebSocket**.
 
-**Basic auth** (`user1` / `1234`): nginx на **443** — диалог при открытии UI; дальше `/wd/hub` и `/playwright/` через selenoid-ui с теми же credentials.
+**Basic auth** (`user1` / `1234`): **selenoid-ui** (`-users`) — диалог при открытии UI; браузер переиспользует credentials для `/wd/hub` и `/playwright/`. Дополнительно nginx на 443 (см. ниже).
 
 | Путь | Auth | Как подключаться |
 |------|------|------------------|
@@ -158,6 +158,7 @@ sudo NGINX_CONF_SRC=/tmp/nginx-selenoid.conf /opt/selenoid/bin/sync-nginx.sh
   browsers.json
   bin/selenoid
   bin/selenoid-ui
+  htpasswd              # user1/1234 для selenoid-ui -users
   video/
   logs/
 /home/selenoid/cm       # бинарник cm (только у пользователя selenoid)

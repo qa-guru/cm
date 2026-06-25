@@ -9,6 +9,28 @@ CM_URL="${CM_URL:-https://github.com/qa-guru/cm/releases/latest/download/cm_linu
 VERSION="${SELENOID_VERSION:-v2.0.3}"
 UI_VERSION="${SELENOID_UI_VERSION:-v2.0.1}"
 GITHUB_OWNER="${GITHUB_OWNER:-qa-guru}"
+UI_USER="${SELENOID_UI_USER:-user1}"
+UI_PASSWORD="${SELENOID_UI_PASSWORD:-1234}"
+UI_AUTH=(-u "${UI_USER}:${UI_PASSWORD}")
+
+ensure_htpasswd() {
+  local dest="$1"
+  if [[ -f "$dest" ]]; then
+    return 0
+  fi
+  if [[ -r /etc/nginx/selenoid.htpasswd ]]; then
+    cp /etc/nginx/selenoid.htpasswd "$dest"
+    chmod 600 "$dest"
+    return 0
+  fi
+  if command -v htpasswd >/dev/null 2>&1; then
+    htpasswd -cb "$dest" "$UI_USER" "$UI_PASSWORD"
+    chmod 600 "$dest"
+    return 0
+  fi
+  echo "FAIL: htpasswd not found and $dest missing" >&2
+  exit 1
+}
 
 version_args=()
 if [[ -n "$VERSION" ]]; then
@@ -89,6 +111,9 @@ docker stop selenoid-ui 2>/dev/null || true
 docker rm selenoid-ui 2>/dev/null || true
 "$CM_BIN" selenoid-ui stop -c "$CONFIG_DIR" 2>/dev/null || true
 
+HTPASSWD="${CONFIG_DIR}/htpasswd"
+ensure_htpasswd "$HTPASSWD"
+
 UI_IMAGE="aerokube/selenoid-ui:latest-release"
 docker pull "$UI_IMAGE" >/dev/null 2>&1 || true
 docker run -d --name selenoid-ui \
@@ -100,6 +125,7 @@ docker run -d --name selenoid-ui \
   /selenoid-ui \
     -selenoid-uri=http://127.0.0.1:4444 \
     -browsers-conf=/etc/selenoid/browsers.json \
+    -users=/etc/selenoid/htpasswd \
     -listen=:8080
 
 echo "=== local hub status ==="
@@ -110,7 +136,7 @@ echo "=== UI backend status ==="
 ui_json=""
 ui_http="000"
 for attempt in 1 2 3 4 5 6; do
-  ui_http="$(curl -sS -o /tmp/ui-status.json -w '%{http_code}' "http://127.0.0.1:8080/status" 2>/dev/null || echo "000")"
+  ui_http="$(curl -sS -o /tmp/ui-status.json -w '%{http_code}' "${UI_AUTH[@]}" "http://127.0.0.1:8080/status" 2>/dev/null || echo "000")"
   if [[ "$ui_http" == "200" ]]; then
     ui_json="$(cat /tmp/ui-status.json)"
     break
@@ -141,6 +167,13 @@ if command -v jq >/dev/null; then
   fi
 else
   echo "$ui_json"
+fi
+
+ui_no_auth="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080/" 2>/dev/null || echo "000")"
+if [[ "$ui_no_auth" == "401" ]]; then
+  echo "OK  UI basic auth enabled (HTTP 401 without credentials)"
+else
+  echo "WARN UI without auth returned HTTP ${ui_no_auth} (expected 401)" >&2
 fi
 echo
 
