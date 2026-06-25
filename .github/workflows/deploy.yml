@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: selenoid-production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Resolve stack version and script ref
         id: meta
