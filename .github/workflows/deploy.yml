@@ -56,13 +56,15 @@ jobs:
             curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/deploy.sh" -o /tmp/deploy-selenoid.sh
             chmod +x /tmp/deploy-selenoid.sh
             bash /tmp/deploy-selenoid.sh
+            curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/nginx-selenoid.conf" -o /tmp/nginx-selenoid.conf
             curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/sync-nginx.sh" -o /tmp/sync-nginx.sh
             chmod +x /tmp/sync-nginx.sh
             if sudo -n true 2>/dev/null; then
-              sudo /tmp/sync-nginx.sh || echo "WARN: nginx sync failed — apply manually: sudo /tmp/sync-nginx.sh"
+              NGINX_CONF_SRC=/tmp/nginx-selenoid.conf sudo /tmp/sync-nginx.sh || echo "WARN: nginx sync failed — apply manually: sudo NGINX_CONF_SRC=/tmp/nginx-selenoid.conf /tmp/sync-nginx.sh"
             else
-              echo "WARN: passwordless sudo unavailable — run on server: sudo /tmp/sync-nginx.sh"
+              echo "WARN: passwordless sudo unavailable — run on server: sudo NGINX_CONF_SRC=/tmp/nginx-selenoid.conf /tmp/sync-nginx.sh"
             fi
+            exit 0
 
       - name: Smoke test (public)
         env:

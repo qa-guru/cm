@@ -8,8 +8,8 @@ SELENOID_USER="${SELENOID_USER:-user1}"
 SELENOID_PASSWORD="${SELENOID_PASSWORD:-1234}"
 AUTH=(-u "${SELENOID_USER}:${SELENOID_PASSWORD}")
 
-echo "=== GET $BASE_URL/status ==="
-status_json="$(curl -fsSL "${AUTH[@]}" "$BASE_URL/status")"
+echo "=== GET $BASE_URL/status (no auth required) ==="
+status_json="$(curl -fsSL "$BASE_URL/status")"
 echo "$status_json" | (command -v jq >/dev/null && jq . || cat)
 
 if ! command -v jq >/dev/null; then
@@ -29,17 +29,40 @@ for pair in "chrome:148.0" "chromium:1.61.1" "firefox:150.0"; do
   fi
 done
 
-echo "=== GET $BASE_URL/wd/hub/status (Selenium, basic auth) ==="
-curl -fsSL "${AUTH[@]}" -o /dev/null -w "HTTP %{http_code}\n" "$BASE_URL/wd/hub/status"
+echo "=== GET $BASE_URL/ (UI, basic auth) ==="
+ui_code="$(curl -s -o /dev/null -w "%{http_code}" "${AUTH[@]}" "$BASE_URL/")"
+if [[ "$ui_code" == "200" ]]; then
+  echo "OK  UI with auth (HTTP 200)"
+else
+  echo "FAIL UI with auth: HTTP $ui_code" >&2
+  exit 1
+fi
+
+echo "=== GET $BASE_URL/ without auth (expect 401) ==="
+no_auth_code="$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/" || true)"
+if [[ "$no_auth_code" == "401" ]]; then
+  echo "OK  UI requires auth (HTTP 401)"
+else
+  echo "FAIL UI should require auth without credentials (HTTP $no_auth_code)" >&2
+  exit 1
+fi
+
+echo "=== GET $BASE_URL/wd/hub/status (via UI proxy, basic auth) ==="
+wd_code="$(curl -fsSL "${AUTH[@]}" -o /dev/null -w "%{http_code}" "$BASE_URL/wd/hub/status")"
+if [[ "$wd_code" == "200" ]]; then
+  echo "OK  /wd/hub with auth (HTTP 200)"
+else
+  echo "FAIL /wd/hub with auth: HTTP $wd_code" >&2
+  exit 1
+fi
 
 echo "=== GET $BASE_URL/playwright/... without auth (expect 401) ==="
-code="$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$BASE_URL/playwright/chromium/1.61.1" || true)"
-if [[ "$code" == "401" ]]; then
-  echo "OK  playwright requires auth (HTTP 401 without credentials)"
-elif [[ -z "$code" || "$code" == "000" ]]; then
-  echo "WARN playwright check inconclusive (HTTP $code) — WS endpoint may not answer plain GET"
+pw_code="$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$BASE_URL/playwright/chromium/1.61.1" || true)"
+if [[ "$pw_code" == "401" ]]; then
+  echo "OK  /playwright/ requires auth (HTTP 401)"
 else
-  echo "NOTE playwright without auth: HTTP $code"
+  echo "FAIL /playwright/ should require auth (HTTP $pw_code)" >&2
+  exit 1
 fi
 
 echo "Smoke OK: $BASE_URL (auth: $SELENOID_USER:***)"
