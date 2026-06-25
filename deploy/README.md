@@ -8,7 +8,7 @@
 |------|------|------------------|
 | `/` (UI) | нет | `https://selenoid.autotests.cloud` |
 | `/wd/hub` | **да** | `http://user1:1234@selenoid.autotests.cloud/wd/hub` или Create Session в UI |
-| `/playwright/` | **да** | `wss://user1:1234@.../playwright/chromium/1.61.1` или Create Session в UI |
+| `/playwright/` | **да** | Create Session в UI (basic auth) или `wss://user1:1234@.../playwright/chromium/1.61.1` |
 | `/status` | нет | `https://selenoid.autotests.cloud/status` |
 | `:4445` | **да** | прямой hub API для CI (`Authorization: Basic …`) |
 
