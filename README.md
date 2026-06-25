@@ -19,8 +19,10 @@
 
 ## Предварительные условия
 
+- **Docker Engine 26.1.x** (API 1.45) — `cm selenoid start` передаёт hub `DOCKER_API_VERSION=1.45`
+- **Go 1.23.x** — для сборки cm
 - Docker и доступ пользователя к `docker` (группа `docker`)
-- Опубликованные релизы [qa-guru/selenoid](https://github.com/qa-guru/selenoid/releases) и [qa-guru/selenoid-ui](https://github.com/qa-guru/selenoid-ui/releases) (сейчас: **v2.0.0**)
+- Опубликованные релизы [qa-guru/selenoid](https://github.com/qa-guru/selenoid/releases) и [qa-guru/selenoid-ui](https://github.com/qa-guru/selenoid-ui/releases) (сейчас: **v2.0.1**)
 
 Альтернатива — локальные бинарники:
 
@@ -37,8 +39,8 @@
 curl -sL https://github.com/qa-guru/cm/releases/latest/download/cm_linux_amd64 -o cm
 chmod +x cm
 
-./cm selenoid start -v v2.0.0    # тег релиза qa-guru/selenoid
-./cm selenoid-ui start -v v2.0.0
+./cm selenoid start -v v2.0.1    # тег релиза qa-guru/selenoid
+./cm selenoid-ui start -v v2.0.1
 ```
 
 Nginx для Playwright WebSocket — см. `deploy/nginx-playwright-snippet.conf`.

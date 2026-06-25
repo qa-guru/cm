@@ -60,6 +60,7 @@ const (
 	selenoidUIContainerName = "selenoid-ui"
 	overrideHome            = "OVERRIDE_HOME"
 	dockerApiVersion        = "DOCKER_API_VERSION"
+	selenoidDockerAPI       = "1.45" // matches github.com/docker/docker v26.1.5 in hub
 )
 
 type SelenoidConfig map[string]config.Versions
@@ -971,7 +972,7 @@ func (c *DockerConfigurator) startContainer(cfg *containerConfig) error {
 		env = cfg.OverrideEnv
 	}
 	if !contains(env, dockerApiVersion) {
-		env = append(env, fmt.Sprintf("%s=%s", dockerApiVersion, c.docker.ClientVersion()))
+		env = append(env, fmt.Sprintf("%s=%s", dockerApiVersion, selenoidDockerAPI))
 	}
 	servicePortString := strconv.Itoa(cfg.ServicePort)
 	port, err := nat.NewPort("tcp", servicePortString)
