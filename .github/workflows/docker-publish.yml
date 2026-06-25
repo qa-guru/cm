@@ -1,0 +1,33 @@
+name: docker-publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Docker image tag (e.g. v2.0.5 or latest-release)'
+        required: true
+        default: 'v2.0.5'
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Golang
+        uses: actions/setup-go@v6
+        with:
+          go-version: ~1.23.8
+          cache: true
+
+      - name: Build
+        run: ci/build.sh
+
+      - name: Push Docker image
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: ci/docker-push.sh "${{ inputs.version }}"

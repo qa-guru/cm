@@ -11,7 +11,7 @@
 ./cm selenoid-ui start
 ```
 
-1. Скачивает обёрточные образы `aerokube/selenoid:latest-release` и `aerokube/selenoid-ui:latest-release`
+1. Скачивает обёрточные образы `aerokube/selenoid:latest-release` и `qaguru/selenoid-ui:latest-release`
 2. Скачивает бинарники из GitHub Releases [qa-guru/selenoid](https://github.com/qa-guru/selenoid) и [qa-guru/selenoid-ui](https://github.com/qa-guru/selenoid-ui)
 3. Записывает встроенный `browsers.json` (Chrome/Firefox + Playwright) в `~/.aerokube/selenoid/`
 4. Тянет все browser-образы из конфига

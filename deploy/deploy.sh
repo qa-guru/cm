@@ -88,7 +88,7 @@ docker stop selenoid-ui 2>/dev/null || true
 docker rm selenoid-ui 2>/dev/null || true
 "$CM_BIN" selenoid-ui stop -c "$CONFIG_DIR" 2>/dev/null || true
 
-UI_IMAGE="aerokube/selenoid-ui:latest-release"
+UI_IMAGE="qaguru/selenoid-ui:latest-release"
 docker pull "$UI_IMAGE" >/dev/null 2>&1 || true
 docker run -d --name selenoid-ui \
   --restart unless-stopped \
