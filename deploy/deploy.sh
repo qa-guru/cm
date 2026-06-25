@@ -6,8 +6,8 @@ set -euo pipefail
 CONFIG_DIR="${SELENOID_CONFIG_DIR:-/opt/selenoid}"
 CM_BIN="${CM_BIN:-$HOME/cm}"
 CM_URL="${CM_URL:-https://github.com/qa-guru/cm/releases/latest/download/cm_linux_amd64}"
-VERSION="${SELENOID_VERSION:-v2.0.3}"
-UI_VERSION="${SELENOID_UI_VERSION:-v2.0.4}"
+VERSION="${SELENOID_VERSION:-v2.0.5}"
+UI_VERSION="${SELENOID_UI_VERSION:-v2.0.5}"
 GITHUB_OWNER="${GITHUB_OWNER:-qa-guru}"
 version_args=()
 if [[ -n "$VERSION" ]]; then
@@ -88,7 +88,7 @@ docker stop selenoid-ui 2>/dev/null || true
 docker rm selenoid-ui 2>/dev/null || true
 "$CM_BIN" selenoid-ui stop -c "$CONFIG_DIR" 2>/dev/null || true
 
-UI_IMAGE="aerokube/selenoid-ui:latest-release"
+UI_IMAGE="qaguru/selenoid-ui:latest-release"
 docker pull "$UI_IMAGE" >/dev/null 2>&1 || true
 docker run -d --name selenoid-ui \
   --restart unless-stopped \

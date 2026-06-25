@@ -169,41 +169,6 @@ sudo NGINX_CONF_SRC=/tmp/nginx-selenoid.conf /opt/selenoid/bin/sync-nginx.sh
 
 ---
 
-## Миграция с `/root/.aerokube`
-
-Если на сервере остался старый стек под root (`/root/.aerokube/`, ручной `docker run`):
-
-### Одной командой (с `/root/.aerokube` на `/opt/selenoid`)
-
-```bash
-# на сервере, от root
-sudo ./deploy/migrate-to-opt.sh
-```
-
-Скрипт создаёт пользователя `selenoid`, переносит данные, права `selenoid:docker`, `cm` в `/home/selenoid/cm`, затем `deploy.sh`.
-
-### Вручную
-
-```bash
-sudo docker stop selenoid selenoid-ui && sudo docker rm selenoid selenoid-ui
-sudo DEPLOY_USER=selenoid ./deploy/bootstrap.sh
-sudo rsync -a /root/.aerokube/selenoid/ /opt/selenoid/
-sudo chown -R selenoid:docker /opt/selenoid
-# от пользователя selenoid (после re-login для docker group):
-SELENOID_CONFIG_DIR=/opt/selenoid ./deploy/deploy.sh
-```
-
-Видео из старого каталога (если не делали migrate-to-opt.sh):
-
-```bash
-sudo rsync -a /root/.aerokube/selenoid/video/ /opt/selenoid/video/
-sudo chown -R selenoid:docker /opt/selenoid/video
-```
-
-После проверки legacy можно удалить: `sudo rm -rf /root/.aerokube /root/cm`.
-
----
-
 ## Релизы стека
 
 | Версия | Документация |

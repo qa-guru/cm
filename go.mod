@@ -61,3 +61,6 @@ require (
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+// Keep cm built against the qa-guru Selenoid fork while preserving the upstream module path.
+replace github.com/aerokube/selenoid => github.com/qa-guru/selenoid v0.0.0-20260625210620-445a00c6972c
