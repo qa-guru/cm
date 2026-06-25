@@ -68,6 +68,7 @@ Workflow [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) в р
 | Variable | Default | Описание |
 |----------|---------|----------|
 | `SELENOID_CONFIG_DIR` | `/opt/selenoid` | Каталог конфигурации на сервере |
+| `SELENOID_PUBLIC_URL` | `https://selenoid.autotests.cloud` | URL для smoke test (не IP — иначе nginx отдаёт чужой cert) |
 
 После настройки secrets: **Actions → deploy → Run workflow** — обновит сервер до latest release.
 

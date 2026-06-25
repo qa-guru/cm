@@ -61,6 +61,8 @@ jobs:
         env:
           SELENOID_USER: user1
           SELENOID_PASSWORD: "1234"
+          SELENOID_PUBLIC_URL: ${{ vars.SELENOID_PUBLIC_URL }}
         run: |
           chmod +x deploy/smoke-remote.sh
-          ./deploy/smoke-remote.sh "https://${{ secrets.SELENOID_DEPLOY_HOST }}"
+          BASE="${SELENOID_PUBLIC_URL:-https://selenoid.autotests.cloud}"
+          ./deploy/smoke-remote.sh "$BASE"
