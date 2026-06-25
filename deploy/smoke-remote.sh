@@ -29,25 +29,25 @@ for pair in "chrome:148.0" "chromium:1.61.1" "firefox:150.0"; do
   fi
 done
 
-echo "=== GET $BASE_URL/ (UI, basic auth) ==="
-ui_code="$(curl -s -o /dev/null -w "%{http_code}" "${AUTH[@]}" "$BASE_URL/")"
+echo "=== GET $BASE_URL/ (UI, no auth) ==="
+ui_code="$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/")"
 if [[ "$ui_code" == "200" ]]; then
-  echo "OK  UI with auth (HTTP 200)"
+  echo "OK  UI is public (HTTP 200)"
 else
-  echo "FAIL UI with auth: HTTP $ui_code" >&2
+  echo "FAIL UI should be public without credentials (HTTP $ui_code)" >&2
   exit 1
 fi
 
-echo "=== GET $BASE_URL/ without auth (expect 401) ==="
-no_auth_code="$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/" || true)"
-if [[ "$no_auth_code" == "401" ]]; then
-  echo "OK  UI requires auth (HTTP 401)"
+echo "=== GET $BASE_URL/wd/hub/status without auth (expect 401) ==="
+wd_no_auth="$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/wd/hub/status" || true)"
+if [[ "$wd_no_auth" == "401" ]]; then
+  echo "OK  /wd/hub requires auth (HTTP 401)"
 else
-  echo "FAIL UI should require auth without credentials (HTTP $no_auth_code)" >&2
+  echo "FAIL /wd/hub should require auth (HTTP $wd_no_auth)" >&2
   exit 1
 fi
 
-echo "=== GET $BASE_URL/wd/hub/status (via UI proxy, basic auth) ==="
+echo "=== GET $BASE_URL/wd/hub/status (with basic auth) ==="
 wd_code="$(curl -fsSL "${AUTH[@]}" -o /dev/null -w "%{http_code}" "$BASE_URL/wd/hub/status")"
 if [[ "$wd_code" == "200" ]]; then
   echo "OK  /wd/hub with auth (HTTP 200)"

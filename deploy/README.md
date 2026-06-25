@@ -2,13 +2,13 @@
 
 Публичный Selenoid для курсов и примеров: **Selenium WebDriver** + **Playwright WebSocket**.
 
-**Basic auth** (`user1` / `1234`): **selenoid-ui** (`-users`) — диалог при открытии UI; браузер переиспользует credentials для `/wd/hub` и `/playwright/`. Дополнительно nginx на 443 (см. ниже).
+**Basic auth** (`user1` / `1234`): nginx на **`/wd/hub`** и **`/playwright/`**. UI (`/`) открыт без пароля.
 
 | Путь | Auth | Как подключаться |
 |------|------|------------------|
-| `/` (UI) | **да** | браузер: `https://selenoid.autotests.cloud` → логин `user1` / `1234` |
-| `/wd/hub` | **да** (через UI) | из UI или `http://user1:1234@selenoid.autotests.cloud/wd/hub` |
-| `/playwright/` | **да** (через UI) | Create Session в UI или `wss://user1:1234@.../playwright/chromium/1.61.1` |
+| `/` (UI) | нет | `https://selenoid.autotests.cloud` |
+| `/wd/hub` | **да** | `http://user1:1234@selenoid.autotests.cloud/wd/hub` или Create Session в UI |
+| `/playwright/` | **да** | `wss://user1:1234@.../playwright/chromium/1.61.1` или Create Session в UI |
 | `/status` | нет | `https://selenoid.autotests.cloud/status` |
 | `:4445` | **да** | прямой hub API для CI (`Authorization: Basic …`) |
 
@@ -20,7 +20,7 @@
 |------------|-----|
 | Selenium | `http://user1:1234@selenoid.autotests.cloud/wd/hub` |
 | Playwright | `wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1` |
-| UI | `https://selenoid.autotests.cloud/` (basic auth) |
+| UI | `https://selenoid.autotests.cloud/` (без auth) |
 | Status | `https://selenoid.autotests.cloud/status` |
 | Video | `https://selenoid.autotests.cloud/video/` |
 
@@ -126,11 +126,13 @@ SELENOID_VERSION=v2.0.2 ./deploy/deploy.sh
 
 | Порт | `location` | Куда | Auth |
 |------|------------|------|------|
-| 443 | `/` | `127.0.0.1:8080` (UI → hub) | **да** — диалог при открытии UI; дальше XHR и WebSocket с теми же credentials |
+| 443 | `/` | `127.0.0.1:8080` (UI) | нет |
+| 443 | `/wd/hub` | `127.0.0.1:8080` (UI → hub) | **да** |
+| 443 | `/playwright/` | `127.0.0.1:8080` (UI → hub) | **да** |
 | 443 | `/status` | `127.0.0.1:4444` | нет |
 | 4445 | `/` | `127.0.0.1:4444` (hub) | **да** — CI / Playwright с заголовком `Authorization` |
 
-Не проксируйте `/wd/hub` и `/playwright/` напрямую на hub:443 — иначе WebSocket Playwright не покажет basic auth в браузере. Весь трафик UI — через `location /` на selenoid-ui.
+Не проксируйте `/wd/hub` и `/playwright/` напрямую на hub:443 — иначе WebSocket Playwright не получит basic auth в браузере. Проксируйте через selenoid-ui.
 
 Справочные файлы: [`nginx-selenoid.conf`](nginx-selenoid.conf), [`sync-nginx.sh`](sync-nginx.sh).
 
@@ -158,7 +160,6 @@ sudo NGINX_CONF_SRC=/tmp/nginx-selenoid.conf /opt/selenoid/bin/sync-nginx.sh
   browsers.json
   bin/selenoid
   bin/selenoid-ui
-  htpasswd              # user1/1234 для selenoid-ui -users
   video/
   logs/
 /home/selenoid/cm       # бинарник cm (только у пользователя selenoid)
