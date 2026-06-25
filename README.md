@@ -39,8 +39,25 @@
 curl -sL https://github.com/qa-guru/cm/releases/latest/download/cm_linux_amd64 -o cm
 chmod +x cm
 
-./cm selenoid start -v v2.0.1    # тег релиза qa-guru/selenoid
-./cm selenoid-ui start -v v2.0.1
+./cm selenoid start
+./cm selenoid-ui start
+```
+
+По умолчанию `cm` скачивает **последний** GitHub Release qa-guru/selenoid и qa-guru/selenoid-ui (`-v` / `--version` не нужен). Как в [документации Aerokube](https://aerokube.com/cm/latest/): `./cm selenoid start`, `./cm selenoid-ui start`.
+
+Явная версия — только если нужен конкретный тег:
+
+```bash
+./cm selenoid start -v v2.0.1
+```
+
+Обновление уже установленного стека:
+
+```bash
+./cm selenoid update
+./cm selenoid-ui update
+# или перекачать бинарники принудительно:
+./cm selenoid start -f
 ```
 
 Nginx для Playwright WebSocket — см. `deploy/nginx-playwright-snippet.conf`.
@@ -64,7 +81,7 @@ go build -o ../bin/cm .
 
 | Флаг | Описание |
 |------|----------|
-| `-v, --version` | Тег GitHub Release для бинарников qa-guru (не тег Docker-обёртки) |
+| `-v, --version` | Опционально: тег GitHub Release (по умолчанию **latest** — последний релиз) |
 | `-j, --browsers-json` | Свой `browsers.json` вместо встроенного |
 | `--selenoid-binary` | Путь к бинарнику hub |
 | `--selenoid-ui-binary` | Путь к бинарнику UI |

@@ -22,12 +22,16 @@
 ## Обновление
 
 ```bash
-curl -sL https://github.com/qa-guru/cm/releases/download/v2.0.1/cm_linux_amd64 -o cm
+curl -sL https://github.com/qa-guru/cm/releases/latest/download/cm_linux_amd64 -o cm
 chmod +x cm
 
 ./cm selenoid stop && ./cm selenoid-ui stop
-./cm selenoid start -v v2.0.1 -f
-./cm selenoid-ui start -v v2.0.1 -f
+./cm selenoid update
+./cm selenoid-ui update
 ```
+
+Или одной командой с перекачкой: `./cm selenoid start -f` и `./cm selenoid-ui start -f`.
+
+Явный тег (`-v v2.0.1`) нужен только если latest на GitHub — не тот релиз, который вы хотите.
 
 Связанные релизы: [selenoid v2.0.1](https://github.com/qa-guru/selenoid/releases/tag/v2.0.1), [selenoid-ui v2.0.1](https://github.com/qa-guru/selenoid-ui/releases/tag/v2.0.1).
