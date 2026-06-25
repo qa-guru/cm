@@ -53,7 +53,7 @@ jobs:
             export SELENOID_CONFIG_DIR="${{ vars.SELENOID_CONFIG_DIR }}"
             export SELENOID_CONFIG_DIR="${SELENOID_CONFIG_DIR:-/opt/selenoid}"
             export CM_BIN="$HOME/cm"
-            curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ steps.meta.outputs.ref }}/deploy/deploy.sh" -o /tmp/deploy-selenoid.sh
+            curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/deploy.sh" -o /tmp/deploy-selenoid.sh
             chmod +x /tmp/deploy-selenoid.sh
             bash /tmp/deploy-selenoid.sh
 
