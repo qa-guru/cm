@@ -60,7 +60,9 @@ chmod +x cm
 ./cm selenoid start -f
 ```
 
-Nginx для Playwright WebSocket — см. `deploy/nginx-playwright-snippet.conf`.
+Nginx для Playwright WebSocket — см. [`deploy/nginx-playwright-snippet.conf`](deploy/nginx-playwright-snippet.conf).
+
+Автодеплой на **selenoid.autotests.cloud** — см. [`deploy/README.md`](deploy/README.md) (GitHub Actions + ручной `./deploy/deploy.sh`).
 
 ## Обновление browsers.json в cm
 
