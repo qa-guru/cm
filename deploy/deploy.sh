@@ -31,14 +31,12 @@ fi
 download_binary() {
   local repo="$1" dest="$2" tag="${3:-${VERSION:-latest}}"
   local url="https://github.com/${GITHUB_OWNER}/${repo}/releases/download/${tag}/${repo}_linux_amd64"
+  local tmp="${dest}.new.$$"
   echo "Downloading ${repo} ${tag} → ${dest}"
-  curl -fsSL "$url" -o "$dest"
-  chmod 755 "$dest"
+  curl -fsSL "$url" -o "$tmp"
+  chmod 755 "$tmp"
+  mv "$tmp" "$dest"
 }
-
-echo "=== download hub binaries (selenoid ${VERSION:-latest}, selenoid-ui ${UI_VERSION:-latest}) ==="
-download_binary selenoid "$CONFIG_DIR/bin/selenoid" "$VERSION"
-download_binary selenoid-ui "$CONFIG_DIR/bin/selenoid-ui" "$UI_VERSION"
 
 echo "=== stop legacy containers ==="
 docker stop selenoid selenoid-ui 2>/dev/null || true
@@ -48,17 +46,21 @@ echo "=== stop cm-managed services ==="
 "$CM_BIN" selenoid stop -c "$CONFIG_DIR" 2>/dev/null || true
 "$CM_BIN" selenoid-ui stop -c "$CONFIG_DIR" 2>/dev/null || true
 
+if pgrep -f "${CONFIG_DIR}/bin/selenoid" >/dev/null 2>&1; then
+  pkill -f "${CONFIG_DIR}/bin/selenoid" || true
+  sleep 1
+fi
+
+echo "=== download hub binaries (selenoid ${VERSION:-latest}, selenoid-ui ${UI_VERSION:-latest}) ==="
+download_binary selenoid "$CONFIG_DIR/bin/selenoid" "$VERSION"
+download_binary selenoid-ui "$CONFIG_DIR/bin/selenoid-ui" "$UI_VERSION"
+
 echo "=== configure hub (pull browser images, write browsers.json) ==="
 "$CM_BIN" selenoid configure -c "$CONFIG_DIR" "${version_args[@]}"
 
 mkdir -p "$CONFIG_DIR/video" "$CONFIG_DIR/logs"
 
 echo "=== start hub (native binary on host — hub-in-docker breaks browser port bindings) ==="
-if pgrep -f "${CONFIG_DIR}/bin/selenoid" >/dev/null 2>&1; then
-  pkill -f "${CONFIG_DIR}/bin/selenoid" || true
-  sleep 1
-fi
-
 export DOCKER_API_VERSION="${DOCKER_API_VERSION:-1.45}"
 nohup "${CONFIG_DIR}/bin/selenoid" \
   -conf "${CONFIG_DIR}/browsers.json" \
