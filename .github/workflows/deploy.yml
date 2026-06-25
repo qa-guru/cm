@@ -58,6 +58,9 @@ jobs:
             bash /tmp/deploy-selenoid.sh
 
       - name: Smoke test (public)
+        env:
+          SELENOID_USER: user1
+          SELENOID_PASSWORD: "1234"
         run: |
           chmod +x deploy/smoke-remote.sh
           ./deploy/smoke-remote.sh "https://${{ secrets.SELENOID_DEPLOY_HOST }}"

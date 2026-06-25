@@ -4,9 +4,12 @@ set -euo pipefail
 
 BASE_URL="${1:-https://selenoid.autotests.cloud}"
 BASE_URL="${BASE_URL%/}"
+SELENOID_USER="${SELENOID_USER:-user1}"
+SELENOID_PASSWORD="${SELENOID_PASSWORD:-1234}"
+AUTH=(-u "${SELENOID_USER}:${SELENOID_PASSWORD}")
 
 echo "=== GET $BASE_URL/status ==="
-status_json="$(curl -fsSL "$BASE_URL/status")"
+status_json="$(curl -fsSL "${AUTH[@]}" "$BASE_URL/status")"
 echo "$status_json" | (command -v jq >/dev/null && jq . || cat)
 
 if ! command -v jq >/dev/null; then
@@ -26,8 +29,7 @@ for pair in "chrome:148.0" "chromium:1.61.1" "firefox:150.0"; do
   fi
 done
 
-echo "=== GET $BASE_URL/wd/hub/status (Selenium) ==="
-curl -fsSL -o /dev/null -w "HTTP %{http_code}\n" "$BASE_URL/wd/hub/status" || \
-  curl -fsSL -o /dev/null -w "HTTP %{http_code}\n" "$BASE_URL/status"
+echo "=== GET $BASE_URL/wd/hub/status (Selenium, basic auth) ==="
+curl -fsSL "${AUTH[@]}" -o /dev/null -w "HTTP %{http_code}\n" "$BASE_URL/wd/hub/status"
 
-echo "Smoke OK: $BASE_URL"
+echo "Smoke OK: $BASE_URL (auth: $SELENOID_USER:***)"

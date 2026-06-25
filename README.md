@@ -34,6 +34,8 @@
 
 ## Установка на selenoid.autotests.cloud
 
+Basic auth для WebDriver и Playwright: **`user1` / `1234`**
+
 ```bash
 # пользователь в группе docker
 curl -sL https://github.com/qa-guru/cm/releases/latest/download/cm_linux_amd64 -o cm
@@ -41,6 +43,13 @@ chmod +x cm
 
 ./cm selenoid start
 ./cm selenoid-ui start
+```
+
+Подключение тестов к публичному hub:
+
+```bash
+export SELENOID_URL=http://user1:1234@selenoid.autotests.cloud/wd/hub
+export PW_TEST_CONNECT_WS_ENDPOINT=wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1
 ```
 
 По умолчанию `cm` скачивает **последний** GitHub Release qa-guru/selenoid и qa-guru/selenoid-ui (`-v` / `--version` не нужен). Как в [документации Aerokube](https://aerokube.com/cm/latest/): `./cm selenoid start`, `./cm selenoid-ui start`.

@@ -14,10 +14,12 @@
 
 ## Endpoints
 
+**Basic auth:** `user1` / `1234` (для WebDriver и Playwright)
+
 | Назначение | URL |
 |------------|-----|
-| Selenium | `http://selenoid.autotests.cloud/wd/hub` |
-| Playwright | `wss://selenoid.autotests.cloud/playwright/chromium/1.61.1` |
+| Selenium | `http://user1:1234@selenoid.autotests.cloud/wd/hub` |
+| Playwright | `wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1` |
 | UI | `http://selenoid.autotests.cloud:8080/` |
 | Status | `https://selenoid.autotests.cloud/status` |
 | Video | `https://selenoid.autotests.cloud/video/` |
@@ -27,8 +29,8 @@
 ## Переменные для тестов
 
 ```bash
-export PW_TEST_CONNECT_WS_ENDPOINT=wss://selenoid.autotests.cloud/playwright/chromium/1.61.1
-export SELENOID_URL=http://selenoid.autotests.cloud/wd/hub
+export PW_TEST_CONNECT_WS_ENDPOINT=wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1
+export SELENOID_URL=http://user1:1234@selenoid.autotests.cloud/wd/hub
 ```
 
 Деплой: [README.md](README.md)

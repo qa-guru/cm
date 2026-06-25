@@ -2,12 +2,14 @@
 
 Публичный Selenoid для курсов и примеров: **Selenium WebDriver** + **Playwright WebSocket**.
 
+**Basic auth** (для `/wd/hub` и Playwright WebSocket): `user1` / `1234`
+
 ## Endpoints
 
 | Назначение | URL |
 |------------|-----|
-| Selenium | `http://selenoid.autotests.cloud/wd/hub` |
-| Playwright | `wss://selenoid.autotests.cloud/playwright/chromium/1.61.1` |
+| Selenium | `http://user1:1234@selenoid.autotests.cloud/wd/hub` |
+| Playwright | `wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1` |
 | UI | `http://selenoid.autotests.cloud:8080/` |
 | Status | `https://selenoid.autotests.cloud/status` |
 | Video | `https://selenoid.autotests.cloud/video/` |
@@ -15,11 +17,16 @@
 ### Переменные для тестов
 
 ```bash
-# Playwright
-export PW_TEST_CONNECT_WS_ENDPOINT=wss://selenoid.autotests.cloud/playwright/chromium/1.61.1
+# Playwright (логин/пароль в URL)
+export PW_TEST_CONNECT_WS_ENDPOINT=wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1
 
-# Selenium
-export SELENOID_URL=http://selenoid.autotests.cloud/wd/hub
+# Selenium (логин/пароль в URL)
+export SELENOID_URL=http://user1:1234@selenoid.autotests.cloud/wd/hub
+
+# Или отдельно:
+export SELENOID_HOST=selenoid.autotests.cloud
+export SELENOID_USER=user1
+export SELENOID_PASSWORD=1234
 ```
 
 Примеры всех стеков: [selenoid_selenium_playwright_tests](https://github.com/qa-guru/selenoid_selenium_playwright_tests).
