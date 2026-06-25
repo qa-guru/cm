@@ -51,8 +51,35 @@ echo "=== stop cm-managed services ==="
 "$CM_BIN" selenoid stop -c "$CONFIG_DIR" 2>/dev/null || true
 "$CM_BIN" selenoid-ui stop -c "$CONFIG_DIR" 2>/dev/null || true
 
-echo "=== start hub (config-dir: $CONFIG_DIR) ==="
-"$CM_BIN" selenoid start -c "$CONFIG_DIR" "${version_args[@]}"
+echo "=== configure hub (pull browser images, write browsers.json) ==="
+"$CM_BIN" selenoid configure -c "$CONFIG_DIR" "${version_args[@]}"
+
+mkdir -p "$CONFIG_DIR/video" "$CONFIG_DIR/logs"
+
+echo "=== start hub (native binary on host — hub-in-docker breaks browser port bindings) ==="
+if pgrep -f "${CONFIG_DIR}/bin/selenoid" >/dev/null 2>&1; then
+  pkill -f "${CONFIG_DIR}/bin/selenoid" || true
+  sleep 1
+fi
+
+export DOCKER_API_VERSION="${DOCKER_API_VERSION:-1.45}"
+nohup "${CONFIG_DIR}/bin/selenoid" \
+  -conf "${CONFIG_DIR}/browsers.json" \
+  -limit 5 \
+  -container-network selenoid \
+  -video-output-dir "${CONFIG_DIR}/video/" \
+  -video-recorder-image selenoid/video-recorder:latest-release \
+  -log-output-dir "${CONFIG_DIR}/logs/" \
+  -listen :4444 \
+  >> "${CONFIG_DIR}/logs/selenoid.log" 2>&1 &
+
+for attempt in 1 2 3 4 5 6 7 8 9 10; do
+  if curl -sf "http://127.0.0.1:4444/status" >/dev/null 2>&1; then
+    break
+  fi
+  echo "hub /status not ready (attempt ${attempt}/10)..." >&2
+  sleep 2
+done
 
 echo "=== start UI (host network -> 127.0.0.1:4444) ==="
 "$CM_BIN" selenoid-ui download -c "$CONFIG_DIR" "${version_args[@]}" 2>/dev/null || true
@@ -114,4 +141,23 @@ else
   echo "$ui_json"
 fi
 echo
+
+echo "=== smoke: create chrome session ==="
+session_json="$(curl -sS -m 120 -X POST "http://127.0.0.1:4444/wd/hub/session" \
+  -H 'Content-Type: application/json' \
+  -d '{"capabilities":{"alwaysMatch":{"browserName":"chrome","browserVersion":"148.0","selenoid:options":{"sessionTimeout":"30s","name":"deploy-smoke"}}}}' || true)"
+if command -v jq >/dev/null; then
+  session_id="$(jq -r '.value.sessionId // .sessionId // empty' <<<"$session_json")"
+  if [[ -z "$session_id" ]]; then
+    echo "FAIL: could not create chrome session: $session_json" >&2
+    tail -30 "${CONFIG_DIR}/logs/selenoid.log" 2>&1 || true
+    exit 1
+  fi
+  echo "OK  session ${session_id}"
+  curl -sS -X DELETE "http://127.0.0.1:4444/wd/hub/session/${session_id}" >/dev/null || true
+else
+  echo "$session_json"
+fi
+echo
 docker ps --filter name=selenoid --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+pgrep -af "${CONFIG_DIR}/bin/selenoid" || true
