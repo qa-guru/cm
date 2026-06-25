@@ -2,14 +2,23 @@
 
 Публичный Selenoid для курсов и примеров: **Selenium WebDriver** + **Playwright WebSocket**.
 
-**Basic auth** (для `/wd/hub` и Playwright WebSocket): `user1` / `1234`
+**Basic auth** (`user1` / `1234`): настроен в **nginx** для защищённых endpoint'ов.
+
+| Путь | Auth сейчас на сервере | Как подключаться |
+|------|------------------------|------------------|
+| `/wd/hub` | **да** | `http://user1:1234@selenoid.autotests.cloud/wd/hub` |
+| `/playwright/` | **нет** (нужно добавить в nginx) | после настройки — `wss://user1:1234@…` или `PW_TEST_CONNECT_HEADERS` |
+| `/status` | нет | без логина |
+
+Чтобы закрыть Playwright тем же паролем — добавьте `auth_basic` в `location /playwright/` (см. [`nginx-selenoid.conf`](nginx-selenoid.conf)).
 
 ## Endpoints
 
 | Назначение | URL |
 |------------|-----|
 | Selenium | `http://user1:1234@selenoid.autotests.cloud/wd/hub` |
-| Playwright | `wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1` |
+| Playwright (после auth в nginx) | `wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1` |
+| Playwright (пока без auth на `/playwright/`) | `wss://selenoid.autotests.cloud/playwright/chromium/1.61.1` |
 | UI | `http://selenoid.autotests.cloud:8080/` |
 | Status | `https://selenoid.autotests.cloud/status` |
 | Video | `https://selenoid.autotests.cloud/video/` |
@@ -17,13 +26,17 @@
 ### Переменные для тестов
 
 ```bash
-# Playwright (логин/пароль в URL)
-export PW_TEST_CONNECT_WS_ENDPOINT=wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1
-
-# Selenium (логин/пароль в URL)
+# Selenium (auth обязателен)
 export SELENOID_URL=http://user1:1234@selenoid.autotests.cloud/wd/hub
 
-# Или отдельно:
+# Playwright — когда auth включён в nginx для /playwright/:
+export PW_TEST_CONNECT_WS_ENDPOINT=wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1
+
+# Альтернатива для Playwright (если клиент не принимает user:pass в URL):
+export PW_TEST_CONNECT_WS_ENDPOINT=wss://selenoid.autotests.cloud/playwright/chromium/1.61.1
+export PW_TEST_CONNECT_HEADERS='{"Authorization":"Basic dXNlcjE6MTIzNA=="}'
+
+# Или отдельно для WebDriver:
 export SELENOID_HOST=selenoid.autotests.cloud
 export SELENOID_USER=user1
 export SELENOID_PASSWORD=1234
@@ -101,20 +114,21 @@ SELENOID_VERSION=v2.0.1 ./deploy/deploy.sh
 
 ## Nginx
 
-Playwright требует WebSocket-прокси. Фрагмент для nginx: [`nginx-playwright-snippet.conf`](nginx-playwright-snippet.conf).
+Playwright требует WebSocket-прокси **и** (рекомендуется) тот же `auth_basic`, что на `/wd/hub`.
 
-```nginx
-server {
-    listen 443 ssl;
-    server_name selenoid.autotests.cloud;
+| Файл | Назначение |
+|------|------------|
+| [`nginx-selenoid.conf`](nginx-selenoid.conf) | полный пример vhost с auth на `/wd/hub` и `/playwright/` |
+| [`nginx-playwright-snippet.conf`](nginx-playwright-snippet.conf) | только `location /playwright/` с auth + WebSocket |
 
-    location / {
-        proxy_pass http://127.0.0.1:4444;
-        # ... стандартные proxy_set_header ...
-    }
+На сервере сейчас auth есть **только** на `/wd/hub`. Чтобы закрыть Playwright:
 
-    # вставить содержимое nginx-playwright-snippet.conf
-}
+```bash
+# если htpasswd ещё нет (user1 / 1234):
+sudo htpasswd -cb /etc/nginx/selenoid.htpasswd user1 1234
+
+# добавить auth_basic в location /playwright/ — см. nginx-selenoid.conf
+sudo nginx -t && sudo systemctl reload nginx
 ```
 
 ---
