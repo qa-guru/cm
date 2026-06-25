@@ -6,7 +6,7 @@ set -euo pipefail
 CONFIG_DIR="${SELENOID_CONFIG_DIR:-/opt/selenoid}"
 CM_BIN="${CM_BIN:-$HOME/cm}"
 CM_URL="${CM_URL:-https://github.com/qa-guru/cm/releases/latest/download/cm_linux_amd64}"
-VERSION="${SELENOID_VERSION:-v2.0.1}"
+VERSION="${SELENOID_VERSION:-v2.0.2}"
 GITHUB_OWNER="${GITHUB_OWNER:-qa-guru}"
 
 version_args=()
@@ -36,12 +36,9 @@ download_binary() {
   chmod 755 "$dest"
 }
 
-if [[ ! -x "$CONFIG_DIR/bin/selenoid" ]]; then
-  download_binary selenoid "$CONFIG_DIR/bin/selenoid"
-fi
-if [[ ! -x "$CONFIG_DIR/bin/selenoid-ui" ]]; then
-  download_binary selenoid-ui "$CONFIG_DIR/bin/selenoid-ui"
-fi
+echo "=== download hub binaries (${VERSION:-latest}) ==="
+download_binary selenoid "$CONFIG_DIR/bin/selenoid"
+download_binary selenoid-ui "$CONFIG_DIR/bin/selenoid-ui"
 
 echo "=== stop legacy containers ==="
 docker stop selenoid selenoid-ui 2>/dev/null || true
