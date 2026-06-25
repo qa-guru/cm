@@ -163,3 +163,16 @@ fi
 echo
 docker ps --filter name=selenoid --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
 pgrep -af "${CONFIG_DIR}/bin/selenoid" || true
+
+echo "=== nginx (basic auth on UI) ==="
+NGINX_CONF="${NGINX_CONF_SRC:-/tmp/nginx-selenoid.conf}"
+NGINX_SYNC="${NGINX_SYNC_SCRIPT:-/tmp/sync-nginx.sh}"
+if [[ ! -f "$NGINX_CONF" || ! -f "$NGINX_SYNC" ]]; then
+  echo "WARN: nginx config not found ($NGINX_CONF / $NGINX_SYNC) — skip"
+elif sudo -n true 2>/dev/null; then
+  NGINX_CONF_SRC="$NGINX_CONF" sudo "$NGINX_SYNC" || echo "WARN: nginx sync failed — run: sudo NGINX_CONF_SRC=$NGINX_CONF $NGINX_SYNC"
+else
+  echo "WARN: passwordless sudo unavailable — run: sudo NGINX_CONF_SRC=$NGINX_CONF $NGINX_SYNC"
+fi
+
+exit 0

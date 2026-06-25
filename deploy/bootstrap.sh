@@ -47,6 +47,15 @@ fi
 echo "=== docker network selenoid (if missing) ==="
 docker network inspect selenoid >/dev/null 2>&1 || docker network create selenoid
 
+echo "=== passwordless sudo for nginx deploy ==="
+SUDOERS="/etc/sudoers.d/${DEPLOY_USER}-selenoid-nginx"
+cat >"$SUDOERS" <<EOF
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: SETENV: /opt/selenoid/bin/sync-nginx.sh
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: SETENV: /tmp/sync-nginx.sh
+EOF
+chmod 440 "$SUDOERS"
+visudo -cf "$SUDOERS"
+
 echo "Bootstrap complete."
 echo "  user:   $DEPLOY_USER"
 echo "  cm:     $CM_BIN"

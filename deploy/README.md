@@ -2,13 +2,15 @@
 
 Публичный Selenoid для курсов и примеров: **Selenium WebDriver** + **Playwright WebSocket**.
 
-**Basic auth** (`user1` / `1234`): настроен в **nginx** для защищённых endpoint'ов.
+**Basic auth** (`user1` / `1234`): nginx на **443** — диалог при открытии UI; дальше `/wd/hub` и `/playwright/` через selenoid-ui с теми же credentials.
 
-| Путь | Auth сейчас на сервере | Как подключаться |
-|------|------------------------|------------------|
-| `/wd/hub` | **да** | `http://user1:1234@selenoid.autotests.cloud/wd/hub` |
-| `/playwright/` | **да** (с июня 2026) | `wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1` |
-| `/status` | нет | без логина |
+| Путь | Auth | Как подключаться |
+|------|------|------------------|
+| `/` (UI) | **да** | браузер: `https://selenoid.autotests.cloud` → логин `user1` / `1234` |
+| `/wd/hub` | **да** (через UI) | из UI или `http://user1:1234@selenoid.autotests.cloud/wd/hub` |
+| `/playwright/` | **да** (через UI) | Create Session в UI или `wss://user1:1234@.../playwright/chromium/1.61.1` |
+| `/status` | нет | `https://selenoid.autotests.cloud/status` |
+| `:4445` | **да** | прямой hub API для CI (`Authorization: Basic …`) |
 
 Справочный полный конфиг: [`nginx-selenoid.conf`](nginx-selenoid.conf).
 
@@ -18,7 +20,7 @@
 |------------|-----|
 | Selenium | `http://user1:1234@selenoid.autotests.cloud/wd/hub` |
 | Playwright | `wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1` |
-| UI | `http://selenoid.autotests.cloud:8080/` |
+| UI | `https://selenoid.autotests.cloud/` (basic auth) |
 | Status | `https://selenoid.autotests.cloud/status` |
 | Video | `https://selenoid.autotests.cloud/video/` |
 
@@ -131,6 +133,17 @@ SELENOID_VERSION=v2.0.2 ./deploy/deploy.sh
 Не проксируйте `/wd/hub` и `/playwright/` напрямую на hub:443 — иначе WebSocket Playwright не покажет basic auth в браузере. Весь трафик UI — через `location /` на selenoid-ui.
 
 Справочные файлы: [`nginx-selenoid.conf`](nginx-selenoid.conf), [`sync-nginx.sh`](sync-nginx.sh).
+
+Применить вручную (если CI не смог из‑за sudo):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/qa-guru/cm/main/deploy/nginx-selenoid.conf -o /tmp/nginx-selenoid.conf
+curl -fsSL https://raw.githubusercontent.com/qa-guru/cm/main/deploy/sync-nginx.sh -o /opt/selenoid/bin/sync-nginx.sh
+chmod +x /opt/selenoid/bin/sync-nginx.sh
+sudo NGINX_CONF_SRC=/tmp/nginx-selenoid.conf /opt/selenoid/bin/sync-nginx.sh
+```
+
+После `bootstrap.sh` пользователь `selenoid` может вызывать `sync-nginx.sh` без пароля.
 
 ### Очистка видео на сервере
 
