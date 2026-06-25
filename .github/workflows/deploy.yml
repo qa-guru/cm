@@ -31,13 +31,13 @@ jobs:
             echo "ref=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
           elif [[ -n "${{ inputs.version }}" ]]; then
             echo "tag=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
-            echo "ref=master" >> "$GITHUB_OUTPUT"
+            echo "ref=main" >> "$GITHUB_OUTPUT"
           elif [[ -n "${{ github.event.client_payload.version }}" ]]; then
             echo "tag=${{ github.event.client_payload.version }}" >> "$GITHUB_OUTPUT"
-            echo "ref=master" >> "$GITHUB_OUTPUT"
+            echo "ref=main" >> "$GITHUB_OUTPUT"
           else
             echo "tag=" >> "$GITHUB_OUTPUT"
-            echo "ref=master" >> "$GITHUB_OUTPUT"
+            echo "ref=main" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Deploy via SSH

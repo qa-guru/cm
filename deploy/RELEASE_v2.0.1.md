@@ -46,4 +46,4 @@ chmod +x ~/cm
 ./cm selenoid-ui update -c /opt/selenoid
 ```
 
-Pin Docker Engine 26.1.x (Ubuntu): [docker-engine-pin-ubuntu.sh](https://github.com/qa-guru/selenoid/blob/master/scripts/docker-engine-pin-ubuntu.sh)
+Pin Docker Engine 26.1.x (Ubuntu): [docker-engine-pin-ubuntu.sh](https://github.com/qa-guru/selenoid/blob/main/scripts/docker-engine-pin-ubuntu.sh)

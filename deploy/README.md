@@ -87,7 +87,7 @@ sudo DEPLOY_USER=selenoid ./deploy/bootstrap.sh
 ### Обновление стека
 
 ```bash
-curl -sL https://raw.githubusercontent.com/qa-guru/cm/master/deploy/deploy.sh -o deploy.sh
+curl -sL https://raw.githubusercontent.com/qa-guru/cm/main/deploy/deploy.sh -o deploy.sh
 chmod +x deploy.sh
 ./deploy.sh
 ```
