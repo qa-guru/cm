@@ -34,4 +34,4 @@ chmod +x cm
 
 Явный тег (`-v v2.0.1`) нужен только если latest на GitHub — не тот релиз, который вы хотите.
 
-Связанные релизы: [selenoid v2.0.1](https://github.com/qa-guru/selenoid/releases/tag/v2.0.1), [selenoid-ui v2.0.1](https://github.com/qa-guru/selenoid-ui/releases/tag/v2.0.1).
+Связанные релизы: [selenoid v2.0.2](https://github.com/qa-guru/selenoid/releases/tag/v2.0.2), [selenoid-ui](https://github.com/qa-guru/selenoid-ui/releases/latest).

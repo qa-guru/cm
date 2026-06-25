@@ -10,7 +10,7 @@
 | `/playwright/` | **да** (с июня 2026) | `wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1` |
 | `/status` | нет | без логина |
 
-Чтобы закрыть Playwright тем же паролем — добавьте `auth_basic` в `location /playwright/` (см. [`nginx-selenoid.conf`](nginx-selenoid.conf)).
+Справочный полный конфиг: [`nginx-selenoid.conf`](nginx-selenoid.conf).
 
 ## Endpoints
 
@@ -28,7 +28,7 @@
 # Selenium (auth обязателен)
 export SELENOID_URL=http://user1:1234@selenoid.autotests.cloud/wd/hub
 
-# Playwright — когда auth включён в nginx для /playwright/:
+# Playwright — auth на /playwright/ (как у /wd/hub):
 export PW_TEST_CONNECT_WS_ENDPOINT=wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1
 
 # Альтернатива для Playwright (если клиент не принимает user:pass в URL):
@@ -98,10 +98,16 @@ chmod +x deploy.sh
 ./deploy/deploy.sh
 ```
 
-Pin версии (опционально):
+Быстрое обновление без полного `deploy.sh`:
 
 ```bash
-SELENOID_VERSION=v2.0.1 ./deploy/deploy.sh
+./deploy/remote-update.sh
+```
+
+Pin версии (опционально, по умолчанию **v2.0.2**):
+
+```bash
+SELENOID_VERSION=v2.0.2 ./deploy/deploy.sh
 ```
 
 ### Проверка
@@ -119,24 +125,16 @@ SELENOID_VERSION=v2.0.1 ./deploy/deploy.sh
 | Порт | `location` | Куда | Auth |
 |------|------------|------|------|
 | 443 | `/wd/hub/` | `127.0.0.1:4444` | `auth_basic 'test'`, `/etc/nginx/.htpasswd` |
-| 443 | `/playwright/` | `127.0.0.1:4444` | то же (добавлено после `/wd/hub/`) |
+| 443 | `/playwright/` | `127.0.0.1:4444` | то же |
 | 443 | `/` | `127.0.0.1:8080` (UI) | нет |
 | 443 | `/status` | `127.0.0.1:4444` | `auth_basic off` |
 | 4445 | `/` | `127.0.0.1:4444` | `auth_basic 'API'`, тот же htpasswd |
 
-До патча `/playwright/` на 443 попадал в `location /` → UI (8080), **без auth**.
-
-Патч (уже применён на проде):
-
-```bash
-sudo cp /etc/nginx/sites-available/selenoid /etc/nginx/sites-available/selenoid.bak.$(date +%Y%m%d)
-sudo python3 patch-selenoid-nginx-playwright.py   # из deploy/
-sudo nginx -t && sudo systemctl reload nginx
-```
-
-Скрипт **не трогает** блок `/wd/hub/` — только вставляет `location /playwright/` сразу после него.
-
 Справочные файлы: [`nginx-selenoid.conf`](nginx-selenoid.conf), [`nginx-playwright-snippet.conf`](nginx-playwright-snippet.conf).
+
+### Очистка видео на сервере
+
+Скрипт [`cleanup-videos.sh`](cleanup-videos.sh) удаляет `.mp4` старше 6 месяцев из `/opt/selenoid/video`. На проде — в root crontab (ежемесячно).
 
 ---
 
@@ -156,9 +154,9 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ---
 
-## Миграция со старого deploy-remote.sh
+## Миграция с `/root/.aerokube`
 
-Старый скрипт с ручным `docker run` и `/root/.aerokube/` **устарел**.
+Если на сервере остался старый стек под root (`/root/.aerokube/`, ручной `docker run`):
 
 ### Одной командой (с `/root/.aerokube` на `/opt/selenoid`)
 
@@ -195,5 +193,6 @@ sudo chown -R selenoid:docker /opt/selenoid/video
 
 | Версия | Документация |
 |--------|--------------|
+| v2.0.2 | [RELEASE_v2.0.2.md](RELEASE_v2.0.2.md) |
 | v2.0.1 | [RELEASE_v2.0.1.md](RELEASE_v2.0.1.md) |
 | v2.0.0 | [RELEASE_v2.0.0.md](RELEASE_v2.0.0.md) |

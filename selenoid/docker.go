@@ -780,9 +780,8 @@ func (c *DockerConfigurator) Start() error {
 	if !contains(cmd, "-container-network") {
 		cmd = append(cmd, "-container-network", networkName)
 	}
-	if len(cmd) == 0 || cmd[0] != selenoidBinaryMountPath {
-		cmd = append([]string{selenoidBinaryMountPath}, cmd...)
-	}
+	// aerokube/selenoid image sets ENTRYPOINT to /usr/bin/selenoid; prepending the
+	// binary again makes Go flag.Parse stop at the duplicate argv and ignore flags.
 
 	overrideEnv := strings.Fields(c.Env)
 	if !strings.Contains(c.Env, "OVERRIDE_VIDEO_OUTPUT_DIR") {
@@ -931,9 +930,8 @@ containers:
 	if !contains(cmd, "-listen") && !contains(cmd, "--listen") {
 		cmd = append(cmd, fmt.Sprintf("-listen=:%d", c.Port))
 	}
-	if len(cmd) == 0 || cmd[0] != selenoidUIBinaryMountPath {
-		cmd = append([]string{selenoidUIBinaryMountPath}, cmd...)
-	}
+	// aerokube/selenoid-ui image sets ENTRYPOINT to /selenoid-ui; prepending the
+	// binary again makes Go flag.Parse stop at the duplicate argv and ignore flags.
 
 	overrideEnv := strings.Fields(c.Env)
 	cfg := &containerConfig{

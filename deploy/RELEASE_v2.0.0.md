@@ -14,7 +14,7 @@
 
 ## Endpoints
 
-**Basic auth** (`user1` / `1234`): nginx на **`/wd/hub`**. **`/playwright/`** — пока без auth (см. [nginx-selenoid.conf](../../cm-src/deploy/nginx-selenoid.conf)).
+**Basic auth** (`user1` / `1234`): nginx на **`/wd/hub`**. **`/playwright/`** — пока без auth (см. [nginx-selenoid.conf](nginx-selenoid.conf)).
 
 | Назначение | URL |
 |------------|-----|

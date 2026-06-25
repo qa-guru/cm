@@ -22,7 +22,7 @@
 - **Docker Engine 26.1.x** (API 1.45) — `cm selenoid start` передаёт hub `DOCKER_API_VERSION=1.45`
 - **Go 1.23.x** — для сборки cm
 - Docker и доступ пользователя к `docker` (группа `docker`)
-- Опубликованные релизы [qa-guru/selenoid](https://github.com/qa-guru/selenoid/releases) и [qa-guru/selenoid-ui](https://github.com/qa-guru/selenoid-ui/releases) (сейчас: **v2.0.1**)
+- Опубликованные релизы [qa-guru/selenoid](https://github.com/qa-guru/selenoid/releases) и [qa-guru/selenoid-ui](https://github.com/qa-guru/selenoid-ui/releases) (сейчас: **v2.0.2** hub)
 
 Альтернатива — локальные бинарники:
 
@@ -34,7 +34,7 @@
 
 ## Установка на selenoid.autotests.cloud
 
-Basic auth для WebDriver: **`user1` / `1234`** (nginx, `/wd/hub`). Playwright `/playwright/` — пока без auth, см. [`deploy/nginx-selenoid.conf`](deploy/nginx-selenoid.conf).
+Basic auth для WebDriver и Playwright: **`user1` / `1234`** (nginx, `/wd/hub` и `/playwright/`), см. [`deploy/nginx-selenoid.conf`](deploy/nginx-selenoid.conf).
 
 ```bash
 # пользователь в группе docker
@@ -49,10 +49,10 @@ chmod +x cm
 
 ```bash
 export SELENOID_URL=http://user1:1234@selenoid.autotests.cloud/wd/hub
-# Playwright (auth в nginx для /playwright/ — после настройки):
-# export PW_TEST_CONNECT_WS_ENDPOINT=wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1
-# Пока /playwright/ без auth:
-export PW_TEST_CONNECT_WS_ENDPOINT=wss://selenoid.autotests.cloud/playwright/chromium/1.61.1
+export PW_TEST_CONNECT_WS_ENDPOINT=wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1
+# Альтернатива, если клиент не принимает user:pass в URL:
+# export PW_TEST_CONNECT_WS_ENDPOINT=wss://selenoid.autotests.cloud/playwright/chromium/1.61.1
+# export PW_TEST_CONNECT_HEADERS='{"Authorization":"Basic dXNlcjE6MTIzNA=="}'
 ```
 
 По умолчанию `cm` скачивает **последний** GitHub Release qa-guru/selenoid и qa-guru/selenoid-ui (`-v` / `--version` не нужен). Как в [документации Aerokube](https://aerokube.com/cm/latest/): `./cm selenoid start`, `./cm selenoid-ui start`.
@@ -60,7 +60,7 @@ export PW_TEST_CONNECT_WS_ENDPOINT=wss://selenoid.autotests.cloud/playwright/chr
 Явная версия — только если нужен конкретный тег:
 
 ```bash
-./cm selenoid start -v v2.0.1
+./cm selenoid start -v v2.0.2
 ```
 
 Обновление уже установленного стека:
