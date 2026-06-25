@@ -7,7 +7,7 @@
 | Путь | Auth сейчас на сервере | Как подключаться |
 |------|------------------------|------------------|
 | `/wd/hub` | **да** | `http://user1:1234@selenoid.autotests.cloud/wd/hub` |
-| `/playwright/` | **нет** (нужно добавить в nginx) | после настройки — `wss://user1:1234@…` или `PW_TEST_CONNECT_HEADERS` |
+| `/playwright/` | **да** (с июня 2026) | `wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1` |
 | `/status` | нет | без логина |
 
 Чтобы закрыть Playwright тем же паролем — добавьте `auth_basic` в `location /playwright/` (см. [`nginx-selenoid.conf`](nginx-selenoid.conf)).
@@ -17,8 +17,7 @@
 | Назначение | URL |
 |------------|-----|
 | Selenium | `http://user1:1234@selenoid.autotests.cloud/wd/hub` |
-| Playwright (после auth в nginx) | `wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1` |
-| Playwright (пока без auth на `/playwright/`) | `wss://selenoid.autotests.cloud/playwright/chromium/1.61.1` |
+| Playwright | `wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1` |
 | UI | `http://selenoid.autotests.cloud:8080/` |
 | Status | `https://selenoid.autotests.cloud/status` |
 | Video | `https://selenoid.autotests.cloud/video/` |
@@ -112,25 +111,31 @@ SELENOID_VERSION=v2.0.1 ./deploy/deploy.sh
 
 ---
 
-## Nginx
+## Nginx (selenoid.autotests.cloud)
 
-Playwright требует WebSocket-прокси **и** (рекомендуется) тот же `auth_basic`, что на `/wd/hub`.
+Реальный конфиг на сервере: **`/etc/nginx/sites-available/selenoid`**
 
-| Файл | Назначение |
-|------|------------|
-| [`nginx-selenoid.conf`](nginx-selenoid.conf) | полный пример vhost с auth на `/wd/hub` и `/playwright/` |
-| [`nginx-playwright-snippet.conf`](nginx-playwright-snippet.conf) | только `location /playwright/` с auth + WebSocket |
+| Порт | `location` | Куда | Auth |
+|------|------------|------|------|
+| 443 | `/wd/hub/` | `127.0.0.1:4444` | `auth_basic 'test'`, `/etc/nginx/.htpasswd` |
+| 443 | `/playwright/` | `127.0.0.1:4444` | то же (добавлено после `/wd/hub/`) |
+| 443 | `/` | `127.0.0.1:8080` (UI) | нет |
+| 443 | `/status` | `127.0.0.1:4444` | `auth_basic off` |
+| 4445 | `/` | `127.0.0.1:4444` | `auth_basic 'API'`, тот же htpasswd |
 
-На сервере сейчас auth есть **только** на `/wd/hub`. Чтобы закрыть Playwright **без правки блока `/wd/hub`**:
+До патча `/playwright/` на 443 попадал в `location /` → UI (8080), **без auth**.
+
+Патч (уже применён на проде):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/qa-guru/cm/master/deploy/nginx-enable-playwright-auth.sh -o /tmp/nginx-enable-playwright-auth.sh
-chmod +x /tmp/nginx-enable-playwright-auth.sh
-sudo /tmp/nginx-enable-playwright-auth.sh --dry-run   # сначала посмотреть diff
-sudo /tmp/nginx-enable-playwright-auth.sh             # применить
+sudo cp /etc/nginx/sites-available/selenoid /etc/nginx/sites-available/selenoid.bak.$(date +%Y%m%d)
+sudo python3 patch-selenoid-nginx-playwright.py   # из deploy/
+sudo nginx -t && sudo systemctl reload nginx
 ```
 
-Скрипт читает путь к `htpasswd` из существующего `location /wd/hub`, добавляет auth только в `/playwright/`, делает backup и `nginx -t` перед reload.
+Скрипт **не трогает** блок `/wd/hub/` — только вставляет `location /playwright/` сразу после него.
+
+Справочные файлы: [`nginx-selenoid.conf`](nginx-selenoid.conf), [`nginx-playwright-snippet.conf`](nginx-playwright-snippet.conf).
 
 ---
 

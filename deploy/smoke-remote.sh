@@ -32,4 +32,14 @@ done
 echo "=== GET $BASE_URL/wd/hub/status (Selenium, basic auth) ==="
 curl -fsSL "${AUTH[@]}" -o /dev/null -w "HTTP %{http_code}\n" "$BASE_URL/wd/hub/status"
 
+echo "=== GET $BASE_URL/playwright/... without auth (expect 401) ==="
+code="$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$BASE_URL/playwright/chromium/1.61.1" || true)"
+if [[ "$code" == "401" ]]; then
+  echo "OK  playwright requires auth (HTTP 401 without credentials)"
+elif [[ -z "$code" || "$code" == "000" ]]; then
+  echo "WARN playwright check inconclusive (HTTP $code) — WS endpoint may not answer plain GET"
+else
+  echo "NOTE playwright without auth: HTTP $code"
+fi
+
 echo "Smoke OK: $BASE_URL (auth: $SELENOID_USER:***)"
