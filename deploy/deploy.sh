@@ -6,7 +6,7 @@ set -euo pipefail
 CONFIG_DIR="${SELENOID_CONFIG_DIR:-/opt/selenoid}"
 CM_BIN="${CM_BIN:-$HOME/cm}"
 CM_URL="${CM_URL:-https://github.com/qa-guru/cm/releases/latest/download/cm_linux_amd64}"
-VERSION="${SELENOID_VERSION:-v2.0.2}"
+VERSION="${SELENOID_VERSION:-v2.0.3}"
 UI_VERSION="${SELENOID_UI_VERSION:-v2.0.1}"
 GITHUB_OWNER="${GITHUB_OWNER:-qa-guru}"
 
@@ -57,6 +57,9 @@ download_binary selenoid-ui "$CONFIG_DIR/bin/selenoid-ui" "$UI_VERSION"
 
 echo "=== configure hub (pull browser images, write browsers.json) ==="
 "$CM_BIN" selenoid configure -c "$CONFIG_DIR" "${version_args[@]}"
+
+echo "=== force refresh Playwright browser image ==="
+docker pull qaguru/playwright:v1.61.1-noble
 
 mkdir -p "$CONFIG_DIR/video" "$CONFIG_DIR/logs"
 
