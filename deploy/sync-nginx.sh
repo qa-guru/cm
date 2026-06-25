@@ -23,6 +23,20 @@ if [[ "$(id -u)" -ne 0 ]]; then
   exit 1
 fi
 
+HTPASSWD="/etc/nginx/selenoid.htpasswd"
+if [[ ! -f "$HTPASSWD" ]]; then
+  if command -v htpasswd >/dev/null 2>&1; then
+    htpasswd -cb "$HTPASSWD" user1 1234
+  elif command -v openssl >/dev/null 2>&1; then
+    printf 'user1:%s\n' "$(openssl passwd -apr1 1234)" >"$HTPASSWD"
+  else
+    echo "Missing $HTPASSWD and neither htpasswd nor openssl is available" >&2
+    exit 1
+  fi
+  chmod 640 "$HTPASSWD"
+  chown root:www-data "$HTPASSWD" 2>/dev/null || chmod 644 "$HTPASSWD"
+fi
+
 cp "$CONF_SRC" "$TMP"
 
 if [[ -f "$SITE_PATH" ]]; then

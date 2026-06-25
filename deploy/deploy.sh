@@ -28,7 +28,12 @@ ensure_htpasswd() {
     chmod 600 "$dest"
     return 0
   fi
-  echo "FAIL: htpasswd not found and $dest missing" >&2
+  if command -v openssl >/dev/null 2>&1; then
+    printf '%s:%s\n' "$UI_USER" "$(openssl passwd -apr1 "$UI_PASSWORD")" >"$dest"
+    chmod 600 "$dest"
+    return 0
+  fi
+  echo "FAIL: cannot create $dest (install htpasswd or openssl)" >&2
   exit 1
 }
 
@@ -121,8 +126,8 @@ docker run -d --name selenoid-ui \
   --network host \
   -v "${CONFIG_DIR}:/etc/selenoid:ro" \
   -v "${CONFIG_DIR}/bin/selenoid-ui:/selenoid-ui:ro" \
+  --entrypoint /selenoid-ui \
   "$UI_IMAGE" \
-  /selenoid-ui \
     -selenoid-uri=http://127.0.0.1:4444 \
     -browsers-conf=/etc/selenoid/browsers.json \
     -users=/etc/selenoid/htpasswd \
@@ -173,7 +178,10 @@ ui_no_auth="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080/" 2>
 if [[ "$ui_no_auth" == "401" ]]; then
   echo "OK  UI basic auth enabled (HTTP 401 without credentials)"
 else
-  echo "WARN UI without auth returned HTTP ${ui_no_auth} (expected 401)" >&2
+  echo "FAIL: selenoid-ui without auth returned HTTP ${ui_no_auth} (expected 401)" >&2
+  docker logs --tail 40 selenoid-ui 2>&1 || true
+  docker inspect selenoid-ui --format '{{json .Config.Cmd}}' 2>&1 || true
+  exit 1
 fi
 echo
 
@@ -203,9 +211,15 @@ NGINX_SYNC="${NGINX_SYNC_SCRIPT:-/tmp/sync-nginx.sh}"
 if [[ ! -f "$NGINX_CONF" || ! -f "$NGINX_SYNC" ]]; then
   echo "WARN: nginx config not found ($NGINX_CONF / $NGINX_SYNC) — skip"
 elif sudo -n true 2>/dev/null; then
-  NGINX_CONF_SRC="$NGINX_CONF" sudo "$NGINX_SYNC" || echo "WARN: nginx sync failed — run: sudo NGINX_CONF_SRC=$NGINX_CONF $NGINX_SYNC"
+  if NGINX_CONF_SRC="$NGINX_CONF" sudo "$NGINX_SYNC"; then
+    echo "OK  nginx config applied"
+  else
+    echo "WARN: nginx sync failed — run: sudo NGINX_CONF_SRC=$NGINX_CONF $NGINX_SYNC" >&2
+  fi
 else
-  echo "WARN: passwordless sudo unavailable — run: sudo NGINX_CONF_SRC=$NGINX_CONF $NGINX_SYNC"
+  echo "WARN: passwordless sudo unavailable — run on server as root:" >&2
+  echo "  sudo ./deploy/bootstrap.sh   # once, installs NOPASSWD for sync-nginx.sh" >&2
+  echo "  sudo NGINX_CONF_SRC=$NGINX_CONF $NGINX_SYNC" >&2
 fi
 
 exit 0
