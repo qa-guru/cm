@@ -54,10 +54,36 @@ echo "=== stop cm-managed services ==="
 echo "=== start hub (config-dir: $CONFIG_DIR) ==="
 "$CM_BIN" selenoid start -c "$CONFIG_DIR" "${version_args[@]}"
 
-echo "=== start UI ==="
-"$CM_BIN" selenoid-ui start -c "$CONFIG_DIR" "${version_args[@]}"
+SELENOID_UI_URI="${SELENOID_UI_URI:-http://selenoid:4444}"
+if ! docker run --rm --network selenoid curlimages/curl:8.5.0 -sf --max-time 5 "${SELENOID_UI_URI}/status" >/dev/null 2>&1; then
+  GW="$(docker network inspect selenoid -f '{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null || true)"
+  if [[ -n "$GW" ]]; then
+    SELENOID_UI_URI="http://${GW}:4444"
+    echo "WARN: selenoid DNS unreachable from network; using gateway ${SELENOID_UI_URI}" >&2
+  fi
+fi
 
-echo "=== local status ==="
+echo "=== start UI (selenoid-uri: ${SELENOID_UI_URI}) ==="
+"$CM_BIN" selenoid-ui start -c "$CONFIG_DIR" "${version_args[@]}" --args "--selenoid-uri ${SELENOID_UI_URI}"
+
+echo "=== local hub status ==="
 curl -sf "http://127.0.0.1:4444/status" | (command -v jq >/dev/null && jq . || cat)
+echo
+
+echo "=== UI backend status ==="
+ui_json="$(curl -sf "http://127.0.0.1:8080/status")"
+if command -v jq >/dev/null; then
+  echo "$ui_json" | jq .
+  if jq -e '.errors | length > 0' <<<"$ui_json" >/dev/null 2>&1; then
+    echo "FAIL: selenoid-ui cannot reach hub (see errors above)" >&2
+    exit 1
+  fi
+  if ! jq -e '.state.total != null' <<<"$ui_json" >/dev/null; then
+    echo "FAIL: selenoid-ui /status missing .state — check --selenoid-uri" >&2
+    exit 1
+  fi
+else
+  echo "$ui_json"
+fi
 echo
 docker ps --filter name=selenoid --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'

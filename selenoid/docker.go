@@ -885,14 +885,24 @@ containers:
 		selenoidContainerName, ggrUIContainerName,
 	} {
 		if ctr := c.getContainer(containerName); ctr != nil {
+			port := uint16(DefaultPort)
 			for _, p := range ctr.Ports {
+				if p.PrivatePort != 0 {
+					port = p.PrivatePort
+					break
+				}
 				if p.PublicPort != 0 {
-					selenoidUri = fmt.Sprintf("--selenoid-uri=http://%s:%d", containerName, p.PublicPort)
-					candidates = []string{containerName}
-					break containers
+					port = p.PublicPort
+					break
 				}
 			}
+			selenoidUri = fmt.Sprintf("--selenoid-uri=http://%s:%d", containerName, port)
+			candidates = []string{containerName}
+			break containers
 		}
+	}
+	if selenoidUri == "" && c.getContainer(selenoidContainerName) != nil {
+		selenoidUri = fmt.Sprintf("--selenoid-uri=http://%s:%d", selenoidContainerName, DefaultPort)
 	}
 	overrideCmd := strings.Fields(c.Args)
 	if len(overrideCmd) > 0 {
