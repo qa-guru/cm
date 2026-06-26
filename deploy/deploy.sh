@@ -55,13 +55,26 @@ download_binary selenoid "$CONFIG_DIR/bin/selenoid" "$VERSION"
 download_binary selenoid-ui "$CONFIG_DIR/bin/selenoid-ui" "$UI_VERSION"
 
 echo "=== configure hub (pull browser images, write browsers.json) ==="
-"$CM_BIN" selenoid configure -c "$CONFIG_DIR" "${version_args[@]}"
+"$CM_BIN" selenoid configure -c "$CONFIG_DIR" -f "${version_args[@]}"
 
 BROWSERS_PRODUCTION="${BROWSERS_PRODUCTION:-/tmp/browsers-production.json}"
 if [[ -f "$BROWSERS_PRODUCTION" ]]; then
   echo "=== apply production browsers.json ==="
   cp "$BROWSERS_PRODUCTION" "$CONFIG_DIR/browsers.json"
 fi
+
+echo "=== pull all browser images from browsers.json ==="
+pull_images() {
+  if command -v jq >/dev/null 2>&1; then
+    jq -r '.. | objects | select(has("image")) | .image' "$CONFIG_DIR/browsers.json" | sort -u
+  else
+    grep -oE '"image": "[^"]+"' "$CONFIG_DIR/browsers.json" | cut -d'"' -f4 | sort -u
+  fi
+}
+while read -r img; do
+  [[ -n "$img" ]] && docker pull "$img"
+done < <(pull_images)
+docker pull selenoid/video-recorder:latest-release
 
 echo "=== force refresh Playwright browser images ==="
 for img in playwright-chromium playwright-firefox playwright-webkit playwright-chrome playwright-msedge; do
