@@ -328,8 +328,8 @@ func testConfigure(t *testing.T, download bool) {
 		cfg := *cfgPointer
 		assert.Len(t, cfg, 5)
 		assert.Contains(t, cfg, "chrome")
-		assert.Contains(t, cfg, "chromium")
-		assert.Contains(t, cfg, "firefox-playwright")
+		assert.Contains(t, cfg, "playwright-chromium")
+		assert.Contains(t, cfg, "playwright-firefox")
 	})
 }
 

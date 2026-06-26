@@ -6,8 +6,8 @@ set -euo pipefail
 CONFIG_DIR="${SELENOID_CONFIG_DIR:-/opt/selenoid}"
 CM_BIN="${CM_BIN:-$HOME/cm}"
 CM_URL="${CM_URL:-https://github.com/qa-guru/cm/releases/latest/download/cm_linux_amd64}"
-VERSION="${SELENOID_VERSION:-v2.0.5}"
-UI_VERSION="${SELENOID_UI_VERSION:-v2.0.5}"
+VERSION="${SELENOID_VERSION:-v2.0.6}"
+UI_VERSION="${SELENOID_UI_VERSION:-v2.0.6}"
 GITHUB_OWNER="${GITHUB_OWNER:-qa-guru}"
 version_args=()
 if [[ -n "$VERSION" ]]; then
@@ -57,8 +57,16 @@ download_binary selenoid-ui "$CONFIG_DIR/bin/selenoid-ui" "$UI_VERSION"
 echo "=== configure hub (pull browser images, write browsers.json) ==="
 "$CM_BIN" selenoid configure -c "$CONFIG_DIR" "${version_args[@]}"
 
-echo "=== force refresh Playwright browser image ==="
-docker pull qaguru/playwright:v1.61.1-noble
+BROWSERS_PRODUCTION="${BROWSERS_PRODUCTION:-/tmp/browsers-production.json}"
+if [[ -f "$BROWSERS_PRODUCTION" ]]; then
+  echo "=== apply production browsers.json ==="
+  cp "$BROWSERS_PRODUCTION" "$CONFIG_DIR/browsers.json"
+fi
+
+echo "=== force refresh Playwright browser images ==="
+for img in playwright-chromium playwright-firefox playwright-webkit playwright-chrome playwright-msedge; do
+  docker pull "qaguru/${img}:1.61.1" || true
+done
 
 mkdir -p "$CONFIG_DIR/video" "$CONFIG_DIR/logs"
 
@@ -142,9 +150,16 @@ else
   echo "$ui_json"
 fi
 
+ui_body="$(curl -sS "http://127.0.0.1:8080/" 2>/dev/null || true)"
 ui_code="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080/" 2>/dev/null || echo "000")"
-if [[ "$ui_code" == "200" ]]; then
-  echo "OK  UI is public (HTTP 200 without credentials)"
+if [[ "$ui_code" == "200" ]] && grep -q 'id="root"' <<<"$ui_body"; then
+  echo "OK  UI is public (HTTP 200, React shell present)"
+elif [[ "$ui_code" == "200" ]]; then
+  echo "FAIL: selenoid-ui returned HTTP 200 but frontend is missing (broken statik build?)" >&2
+  echo "      Response starts with: ${ui_body:0:120}" >&2
+  docker logs --tail 40 selenoid-ui 2>&1 || true
+  docker inspect selenoid-ui --format '{{json .Config.Cmd}}' 2>&1 || true
+  exit 1
 else
   echo "FAIL: selenoid-ui returned HTTP ${ui_code} (expected 200)" >&2
   docker logs --tail 40 selenoid-ui 2>&1 || true

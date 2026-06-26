@@ -1,6 +1,6 @@
 # Configuration Manager (qa-guru fork)
 
-Форк [aerokube/cm](https://github.com/aerokube/cm) для установки [qa-guru/selenoid](https://github.com/qa-guru/selenoid) с Playwright, twilio/selenoid и qaguru/playwright.
+Форк [aerokube/cm](https://github.com/aerokube/cm) для установки [qa-guru/selenoid](https://github.com/qa-guru/selenoid) с Playwright, twilio/selenoid и qaguru/playwright-*.
 
 ## Что делает
 
@@ -49,9 +49,9 @@ chmod +x cm
 
 ```bash
 export SELENOID_URL=http://user1:1234@selenoid.autotests.cloud/wd/hub
-export PW_TEST_CONNECT_WS_ENDPOINT=wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1
+export PW_TEST_CONNECT_WS_ENDPOINT=wss://user1:1234@selenoid.autotests.cloud/playwright/playwright-chromium/1.61.1
 # Альтернатива, если клиент не принимает user:pass в URL:
-# export PW_TEST_CONNECT_WS_ENDPOINT=wss://selenoid.autotests.cloud/playwright/chromium/1.61.1
+# export PW_TEST_CONNECT_WS_ENDPOINT=wss://selenoid.autotests.cloud/playwright/playwright-chromium/1.61.1
 # export PW_TEST_CONNECT_HEADERS='{"Authorization":"Basic dXNlcjE6MTIzNA=="}'
 ```
 

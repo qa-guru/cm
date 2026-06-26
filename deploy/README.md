@@ -8,7 +8,7 @@
 |------|------|------------------|
 | `/` (UI) | нет | `https://selenoid.autotests.cloud` |
 | `/wd/hub` | **да** | `http://user1:1234@selenoid.autotests.cloud/wd/hub` или Create Session в UI |
-| `/playwright/` | **да** | Create Session в UI (basic auth) или `wss://user1:1234@.../playwright/chromium/1.61.1` |
+| `/playwright/` | **да** | Create Session в UI (basic auth) или `wss://user1:1234@.../playwright/playwright-chromium/1.61.1` |
 | `/status` | нет | `https://selenoid.autotests.cloud/status` |
 | `:4445` | **да** | прямой hub API для CI (`Authorization: Basic …`) |
 
@@ -19,7 +19,7 @@
 | Назначение | URL |
 |------------|-----|
 | Selenium | `http://user1:1234@selenoid.autotests.cloud/wd/hub` |
-| Playwright | `wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1` |
+| Playwright | `wss://user1:1234@selenoid.autotests.cloud/playwright/playwright-chromium/1.61.1` |
 | UI | `https://selenoid.autotests.cloud/` (без auth) |
 | Status | `https://selenoid.autotests.cloud/status` |
 | Video | `https://selenoid.autotests.cloud/video/` |
@@ -31,10 +31,10 @@
 export SELENOID_URL=http://user1:1234@selenoid.autotests.cloud/wd/hub
 
 # Playwright — auth на /playwright/ (как у /wd/hub):
-export PW_TEST_CONNECT_WS_ENDPOINT=wss://user1:1234@selenoid.autotests.cloud/playwright/chromium/1.61.1
+export PW_TEST_CONNECT_WS_ENDPOINT=wss://user1:1234@selenoid.autotests.cloud/playwright/playwright-chromium/1.61.1
 
 # Альтернатива для Playwright (если клиент не принимает user:pass в URL):
-export PW_TEST_CONNECT_WS_ENDPOINT=wss://selenoid.autotests.cloud/playwright/chromium/1.61.1
+export PW_TEST_CONNECT_WS_ENDPOINT=wss://selenoid.autotests.cloud/playwright/playwright-chromium/1.61.1
 export PW_TEST_CONNECT_HEADERS='{"Authorization":"Basic dXNlcjE6MTIzNA=="}'
 
 # Или отдельно для WebDriver:
@@ -106,10 +106,10 @@ chmod +x deploy.sh
 ./deploy/remote-update.sh
 ```
 
-Pin версии (опционально, по умолчанию **v2.0.2**):
+Pin версии (опционально, по умолчанию **v2.0.6**):
 
 ```bash
-SELENOID_VERSION=v2.0.2 ./deploy/deploy.sh
+SELENOID_VERSION=v2.0.6 ./deploy/deploy.sh
 ```
 
 ### Проверка
@@ -173,6 +173,7 @@ sudo NGINX_CONF_SRC=/tmp/nginx-selenoid.conf /opt/selenoid/bin/sync-nginx.sh
 
 | Версия | Документация |
 |--------|--------------|
+| v2.0.6 | [RELEASE_v2.0.6.md](RELEASE_v2.0.6.md) |
 | v2.0.2 | [RELEASE_v2.0.2.md](RELEASE_v2.0.2.md) |
 | v2.0.1 | [RELEASE_v2.0.1.md](RELEASE_v2.0.1.md) |
 | v2.0.0 | [RELEASE_v2.0.0.md](RELEASE_v2.0.0.md) |

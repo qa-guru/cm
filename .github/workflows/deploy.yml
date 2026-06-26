@@ -60,6 +60,7 @@ jobs:
             cp /tmp/nginx-selenoid.conf "${SELENOID_CONFIG_DIR}/bin/nginx-selenoid.conf"
             export NGINX_CONF_SRC=/tmp/nginx-selenoid.conf
             export NGINX_SYNC_SCRIPT="${SELENOID_CONFIG_DIR}/bin/sync-nginx.sh"
+            curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/browsers-production.json" -o /tmp/browsers-production.json
             curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/deploy.sh" -o /tmp/deploy-selenoid.sh
             chmod +x /tmp/deploy-selenoid.sh
             bash /tmp/deploy-selenoid.sh

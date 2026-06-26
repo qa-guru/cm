@@ -57,7 +57,7 @@ else
 fi
 
 echo "=== GET $BASE_URL/playwright/... without auth (expect 401) ==="
-pw_code="$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$BASE_URL/playwright/chromium/1.61.1" || true)"
+pw_code="$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$BASE_URL/playwright/playwright-chromium/1.61.1" || true)"
 if [[ "$pw_code" == "401" ]]; then
   echo "OK  /playwright/ requires auth (HTTP 401)"
 else
