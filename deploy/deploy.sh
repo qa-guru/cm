@@ -89,11 +89,6 @@ while read -r img; do
 done < <(pull_images)
 docker pull selenoid/video-recorder:latest-release
 
-echo "=== force refresh Playwright browser images ==="
-for img in playwright-chromium playwright-firefox playwright-webkit playwright-chrome playwright-msedge; do
-  docker pull "qaguru/${img}:1.61.1" || true
-done
-
 mkdir -p "$CONFIG_DIR/video" "$CONFIG_DIR/logs"
 
 echo "=== docker network selenoid ==="

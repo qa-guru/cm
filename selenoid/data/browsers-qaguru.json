@@ -19,6 +19,12 @@
         "port": "4444",
         "path": "/",
         "tmpfs": { "/tmp": "size=512m" }
+      },
+      "128.0": {
+        "image": "selenoid/vnc_chrome:128.0",
+        "port": "4444",
+        "path": "/",
+        "tmpfs": { "/tmp": "size=512m" }
       }
     }
   },
@@ -76,6 +82,16 @@
         "path": "/",
         "protocol": "playwright",
         "playwrightVersion": "1.60.0",
+        "user": "pwuser",
+        "workDir": "/home/pwuser",
+        "shmSize": 2147483648
+      },
+      "1.46.0": {
+        "image": "qaguru/playwright-chromium:1.46.0",
+        "port": "3000",
+        "path": "/",
+        "protocol": "playwright",
+        "playwrightVersion": "1.46.0",
         "user": "pwuser",
         "workDir": "/home/pwuser",
         "shmSize": 2147483648
