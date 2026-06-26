@@ -39,19 +39,37 @@ fi
 
 cp "$CONF_SRC" "$TMP"
 
+: >"$SSL_SNIPPET"
 if [[ -f "$SITE_PATH" ]]; then
-  grep -E '^\s*ssl_' "$SITE_PATH" >"$SSL_SNIPPET" || true
-  if [[ -s "$SSL_SNIPPET" ]]; then
-    awk -v sslfile="$SSL_SNIPPET" '
-      /# ssl_certificate \.\.\.;/ {
-        while ((getline line < sslfile) > 0) print line
-        close(sslfile)
-        next
-      }
-      { print }
-    ' "$TMP" >"${TMP}.patched"
-    mv "${TMP}.patched" "$TMP"
-  fi
+  grep -E '^\s*ssl_' "$SITE_PATH" >>"$SSL_SNIPPET" || true
+fi
+if [[ ! -s "$SSL_SNIPPET" ]]; then
+  for domain in selenoid.autotests.cloud autotests.cloud api.autotests.cloud; do
+    if [[ -f "/etc/letsencrypt/live/${domain}/fullchain.pem" ]]; then
+      {
+        echo "    ssl_certificate /etc/letsencrypt/live/${domain}/fullchain.pem;"
+        echo "    ssl_certificate_key /etc/letsencrypt/live/${domain}/privkey.pem;"
+      } >>"$SSL_SNIPPET"
+      break
+    fi
+  done
+fi
+if [[ -s "$SSL_SNIPPET" ]]; then
+  awk -v sslfile="$SSL_SNIPPET" '
+    /# ssl_certificate \.\.\.;/ {
+      while ((getline line < sslfile) > 0) print line
+      close(sslfile)
+      next
+    }
+    { print }
+  ' "$TMP" >"${TMP}.patched"
+  mv "${TMP}.patched" "$TMP"
+else
+  echo "WARN: no ssl_certificate lines found; HTTPS will not work until certs are configured" >&2
+fi
+
+if command -v certbot >/dev/null 2>&1; then
+  certbot renew --quiet 2>/dev/null || true
 fi
 
 cp "$TMP" "$SITE_PATH"
