@@ -217,7 +217,7 @@ echo
 docker ps --filter name=selenoid --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
 pgrep -af "${CONFIG_DIR}/bin/selenoid" || true
 
-echo "=== nginx (basic auth on /wd/hub and /playwright/) ==="
+echo "=== nginx (basic auth on /wd/hub; /playwright/ public for UI WebSocket) ==="
 NGINX_CONF="${NGINX_CONF_SRC:-/tmp/nginx-selenoid.conf}"
 NGINX_SYNC="${NGINX_SYNC_SCRIPT:-/tmp/sync-nginx.sh}"
 if [[ ! -f "$NGINX_CONF" || ! -f "$NGINX_SYNC" ]]; then

@@ -2,13 +2,13 @@
 
 Публичный Selenoid для курсов и примеров: **Selenium WebDriver** + **Playwright WebSocket**.
 
-**Basic auth** (`user1` / `1234`): nginx на **`/wd/hub`** и **`/playwright/`**. UI (`/`) открыт без пароля.
+**Basic auth** (`user1` / `1234`): nginx на **`/wd/hub`** и **`:4445`**. UI и Playwright WS (`/playwright/`) открыты без пароля — иначе Create Session в браузере не работает (WebSocket API не передаёт Basic Auth).
 
 | Путь | Auth | Как подключаться |
 |------|------|------------------|
 | `/` (UI) | нет | `https://selenoid.autotests.cloud` |
-| `/wd/hub` | **да** | `http://user1:1234@selenoid.autotests.cloud/wd/hub` или Create Session в UI |
-| `/playwright/` | **да** | Create Session в UI (basic auth) или `wss://user1:1234@.../playwright/playwright-chromium/1.61.1` |
+| `/wd/hub` | **да** | `http://user1:1234@selenoid.autotests.cloud/wd/hub` |
+| `/playwright/` | нет | Create Session в UI или `wss://selenoid.autotests.cloud/playwright/playwright-chromium/1.61.1` |
 | `/status` | нет | `https://selenoid.autotests.cloud/status` |
 | `:4445` | **да** | прямой hub API для CI (`Authorization: Basic …`) |
 
@@ -19,7 +19,7 @@
 | Назначение | URL |
 |------------|-----|
 | Selenium | `http://user1:1234@selenoid.autotests.cloud/wd/hub` |
-| Playwright | `wss://user1:1234@selenoid.autotests.cloud/playwright/playwright-chromium/1.61.1` |
+| Playwright | `wss://selenoid.autotests.cloud/playwright/playwright-chromium/1.61.1` (или `:4445` с `Authorization` для CI) |
 | UI | `https://selenoid.autotests.cloud/` (без auth) |
 | Status | `https://selenoid.autotests.cloud/status` |
 | Video | `https://selenoid.autotests.cloud/video/` |
@@ -30,11 +30,11 @@
 # Selenium (auth обязателен)
 export SELENOID_URL=http://user1:1234@selenoid.autotests.cloud/wd/hub
 
-# Playwright — auth на /playwright/ (как у /wd/hub):
-export PW_TEST_CONNECT_WS_ENDPOINT=wss://user1:1234@selenoid.autotests.cloud/playwright/playwright-chromium/1.61.1
-
-# Альтернатива для Playwright (если клиент не принимает user:pass в URL):
+# Playwright (без auth на :443):
 export PW_TEST_CONNECT_WS_ENDPOINT=wss://selenoid.autotests.cloud/playwright/playwright-chromium/1.61.1
+
+# Playwright с auth — порт 4445 (CI):
+export PW_TEST_CONNECT_WS_ENDPOINT=wss://selenoid.autotests.cloud:4445/playwright/playwright-chromium/1.61.1
 export PW_TEST_CONNECT_HEADERS='{"Authorization":"Basic dXNlcjE6MTIzNA=="}'
 
 # Или отдельно для WebDriver:
@@ -128,11 +128,11 @@ SELENOID_VERSION=v2.0.6 ./deploy/deploy.sh
 |------|------------|------|------|
 | 443 | `/` | `127.0.0.1:8080` (UI) | нет |
 | 443 | `/wd/hub` | `127.0.0.1:8080` (UI → hub) | **да** |
-| 443 | `/playwright/` | `127.0.0.1:8080` (UI → hub) | **да** |
+| 443 | `/playwright/` | `127.0.0.1:8080` (UI → hub) | нет (UI WebSocket) |
 | 443 | `/status` | `127.0.0.1:4444` | нет |
 | 4445 | `/` | `127.0.0.1:4444` (hub) | **да** — CI / Playwright с заголовком `Authorization` |
 
-Не проксируйте `/wd/hub` и `/playwright/` напрямую на hub:443 — иначе WebSocket Playwright не получит basic auth в браузере. Проксируйте через selenoid-ui.
+Не проксируйте `/wd/hub` и `/playwright/` напрямую на hub:443 — проксируйте через selenoid-ui. Не включайте basic auth на `/playwright/` — браузерный WebSocket не передаёт credentials.
 
 Справочные файлы: [`nginx-selenoid.conf`](nginx-selenoid.conf), [`sync-nginx.sh`](sync-nginx.sh).
 

@@ -56,12 +56,12 @@ else
   exit 1
 fi
 
-echo "=== GET $BASE_URL/playwright/... without auth (expect 401) ==="
+echo "=== GET $BASE_URL/playwright/... without auth (expect 400 — WS upgrade required) ==="
 pw_code="$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$BASE_URL/playwright/playwright-chromium/1.61.1" || true)"
-if [[ "$pw_code" == "401" ]]; then
-  echo "OK  /playwright/ requires auth (HTTP 401)"
+if [[ "$pw_code" == "400" || "$pw_code" == "426" ]]; then
+  echo "OK  /playwright/ is public for UI WebSocket (HTTP $pw_code)"
 else
-  echo "FAIL /playwright/ should require auth (HTTP $pw_code)" >&2
+  echo "FAIL /playwright/ should be reachable without auth for UI (HTTP $pw_code, want 400)" >&2
   exit 1
 fi
 

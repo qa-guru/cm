@@ -34,7 +34,7 @@
 
 ## Установка на selenoid.autotests.cloud
 
-Basic auth для WebDriver и Playwright: **`user1` / `1234`** (nginx, `/wd/hub` и `/playwright/`), см. [`deploy/nginx-selenoid.conf`](deploy/nginx-selenoid.conf).
+Basic auth для WebDriver: **`user1` / `1234`** (nginx, `/wd/hub` и порт `:4445`). Playwright WS на `:443` без auth — см. [`deploy/nginx-selenoid.conf`](deploy/nginx-selenoid.conf).
 
 ```bash
 # пользователь в группе docker
