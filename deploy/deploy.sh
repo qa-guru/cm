@@ -96,6 +96,9 @@ done
 
 mkdir -p "$CONFIG_DIR/video" "$CONFIG_DIR/logs"
 
+echo "=== docker network selenoid ==="
+docker network inspect selenoid >/dev/null 2>&1 || docker network create selenoid
+
 echo "=== start hub (native binary on host — hub-in-docker breaks browser port bindings) ==="
 export DOCKER_API_VERSION="${DOCKER_API_VERSION:-1.45}"
 nohup "${CONFIG_DIR}/bin/selenoid" \
