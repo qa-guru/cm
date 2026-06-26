@@ -53,15 +53,18 @@ jobs:
             export SELENOID_CONFIG_DIR="${{ vars.SELENOID_CONFIG_DIR }}"
             export SELENOID_CONFIG_DIR="${SELENOID_CONFIG_DIR:-/opt/selenoid}"
             export CM_BIN="$HOME/cm"
-            curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/nginx-selenoid.conf" -o /tmp/nginx-selenoid.conf
-            curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/sync-nginx.sh" -o /tmp/sync-nginx.sh
-            chmod +x /tmp/sync-nginx.sh
-            export NGINX_CONF_SRC=/tmp/nginx-selenoid.conf
-            export NGINX_SYNC_SCRIPT=/tmp/sync-nginx.sh
-            curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/browsers-production.json" -o /tmp/browsers-production.json
-            curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/deploy.sh" -o /tmp/deploy-selenoid.sh
-            chmod +x /tmp/deploy-selenoid.sh
-            bash /tmp/deploy-selenoid.sh
+            STAGING="$HOME/.selenoid-deploy"
+            mkdir -p "$STAGING"
+            curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/nginx-selenoid.conf" -o "$STAGING/nginx-selenoid.conf"
+            curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/sync-nginx.sh" -o "$STAGING/sync-nginx.sh"
+            chmod +x "$STAGING/sync-nginx.sh"
+            export NGINX_CONF_SRC="$STAGING/nginx-selenoid.conf"
+            export NGINX_SYNC_SCRIPT="$STAGING/sync-nginx.sh"
+            curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/browsers-production.json" -o "$STAGING/browsers-production.json"
+            export BROWSERS_PRODUCTION="$STAGING/browsers-production.json"
+            curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/deploy.sh" -o "$STAGING/deploy-selenoid.sh"
+            chmod +x "$STAGING/deploy-selenoid.sh"
+            bash "$STAGING/deploy-selenoid.sh"
 
       - name: Smoke test (public)
         env:
