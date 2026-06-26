@@ -27,6 +27,19 @@ if [[ ! -x "$CM_BIN" ]]; then
   chmod +x "$CM_BIN"
 fi
 
+refresh_cm() {
+  local tag="${VERSION:-latest}"
+  local url="https://github.com/${GITHUB_OWNER}/cm/releases/download/${tag}/cm_linux_amd64"
+  if [[ "$tag" == "latest" ]]; then
+    url="$CM_URL"
+  fi
+  echo "Refreshing cm from ${url}"
+  curl -fsSL "$url" -o "${CM_BIN}.new.$$"
+  chmod +x "${CM_BIN}.new.$$"
+  mv "${CM_BIN}.new.$$" "$CM_BIN"
+}
+refresh_cm
+
 download_binary() {
   local repo="$1" dest="$2" tag="${3:-${VERSION:-latest}}"
   local url="https://github.com/${GITHUB_OWNER}/${repo}/releases/download/${tag}/${repo}_linux_amd64"
@@ -54,13 +67,13 @@ echo "=== download hub binaries (selenoid ${VERSION:-latest}, selenoid-ui ${UI_V
 download_binary selenoid "$CONFIG_DIR/bin/selenoid" "$VERSION"
 download_binary selenoid-ui "$CONFIG_DIR/bin/selenoid-ui" "$UI_VERSION"
 
-echo "=== configure hub (pull browser images, write browsers.json) ==="
-"$CM_BIN" selenoid configure -c "$CONFIG_DIR" -f "${version_args[@]}"
-
+echo "=== configure hub (browsers.json + pull images) ==="
 BROWSERS_PRODUCTION="${BROWSERS_PRODUCTION:-/tmp/browsers-production.json}"
 if [[ -f "$BROWSERS_PRODUCTION" ]]; then
-  echo "=== apply production browsers.json ==="
+  echo "=== apply production browsers.json (skip cm configure) ==="
   cp "$BROWSERS_PRODUCTION" "$CONFIG_DIR/browsers.json"
+else
+  "$CM_BIN" selenoid configure -c "$CONFIG_DIR" -f "${version_args[@]}"
 fi
 
 echo "=== pull all browser images from browsers.json ==="
