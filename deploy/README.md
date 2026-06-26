@@ -173,6 +173,7 @@ sudo NGINX_CONF_SRC=/tmp/nginx-selenoid.conf /opt/selenoid/bin/sync-nginx.sh
 
 | Версия | Документация |
 |--------|--------------|
+| v2.0.7 | [RELEASE_v2.0.7.md](RELEASE_v2.0.7.md) — **prod verified** |
 | v2.0.6 | [RELEASE_v2.0.6.md](RELEASE_v2.0.6.md) |
 | v2.0.2 | [RELEASE_v2.0.2.md](RELEASE_v2.0.2.md) |
 | v2.0.1 | [RELEASE_v2.0.1.md](RELEASE_v2.0.1.md) |

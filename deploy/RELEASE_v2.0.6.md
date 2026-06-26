@@ -9,6 +9,8 @@
 
 Предыдущий стек: [v2.0.5](https://github.com/qa-guru/cm/releases/tag/v2.0.5)
 
+Следующий: [v2.0.7](RELEASE_v2.0.7.md) — production deploy fixes (hub/UI остаются v2.0.6).
+
 ---
 
 ## Что нового в v2.0.6
