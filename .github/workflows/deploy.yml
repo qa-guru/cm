@@ -55,11 +55,13 @@ jobs:
             export CM_BIN="$HOME/cm"
             STAGING="$HOME/.selenoid-deploy"
             mkdir -p "$STAGING"
-            curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/nginx-selenoid.conf" -o "$STAGING/nginx-selenoid.conf"
-            curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/sync-nginx.sh" -o "$STAGING/sync-nginx.sh"
-            chmod +x "$STAGING/sync-nginx.sh"
-            export NGINX_CONF_SRC="$STAGING/nginx-selenoid.conf"
-            export NGINX_SYNC_SCRIPT="$STAGING/sync-nginx.sh"
+            # /tmp/sync-nginx.sh is in sudoers (bootstrap.sh); ~/.selenoid-deploy is not.
+            curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/nginx-selenoid.conf" -o /tmp/nginx-selenoid.conf
+            curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/sync-nginx.sh" -o /tmp/sync-nginx.sh
+            chmod +x /tmp/sync-nginx.sh
+            cp /tmp/sync-nginx.sh /opt/selenoid/bin/sync-nginx.sh 2>/dev/null || true
+            export NGINX_CONF_SRC=/tmp/nginx-selenoid.conf
+            export NGINX_SYNC_SCRIPT=/tmp/sync-nginx.sh
             curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/browsers-production.json" -o "$STAGING/browsers-production.json"
             export BROWSERS_PRODUCTION="$STAGING/browsers-production.json"
             curl -fsSL "https://raw.githubusercontent.com/qa-guru/cm/${{ github.sha }}/deploy/deploy.sh" -o "$STAGING/deploy-selenoid.sh"
