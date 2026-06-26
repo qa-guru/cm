@@ -98,7 +98,7 @@ echo "=== start hub (native binary on host — hub-in-docker breaks browser port
 export DOCKER_API_VERSION="${DOCKER_API_VERSION:-1.45}"
 nohup "${CONFIG_DIR}/bin/selenoid" \
   -conf "${CONFIG_DIR}/browsers.json" \
-  -limit 5 \
+  -limit 20 \
   -container-network selenoid \
   -video-output-dir "${CONFIG_DIR}/video/" \
   -video-recorder-image selenoid/video-recorder:latest-release \
