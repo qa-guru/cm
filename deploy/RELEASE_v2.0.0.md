@@ -8,19 +8,16 @@
 | Selenoid hub | [v2.0.0](https://github.com/qa-guru/selenoid/releases/tag/v2.0.0) | [selenoid v2.0.0](https://github.com/qa-guru/selenoid/releases/tag/v2.0.0) |
 | Selenoid UI | [v2.0.0](https://github.com/qa-guru/selenoid-ui/releases/tag/v2.0.0) | [selenoid-ui v2.0.0](https://github.com/qa-guru/selenoid-ui/releases/tag/v2.0.0) |
 | Playwright image | [qaguru/playwright-chromium](https://hub.docker.com/r/qaguru/playwright-chromium) и др. | [playwright-image](https://github.com/qa-guru/playwright-image) |
-| Примеры тестов | [selenoid_selenium_playwright_tests](https://github.com/qa-guru/selenoid_selenium_playwright_tests) | коллекция примеров |
 
 ---
 
 ## Endpoints
 
-**Basic auth** (`user1` / `1234`): nginx на **`/wd/hub`**. **`/playwright/`** — пока без auth (см. [nginx-selenoid.conf](nginx-selenoid.conf)).
-
 | Назначение | URL |
 |------------|-----|
-| Selenium | `http://user1:1234@selenoid.autotests.cloud/wd/hub` |
+| Selenium | `https://selenoid.autotests.cloud/wd/hub` |
 | Playwright | `wss://selenoid.autotests.cloud/playwright/playwright-chromium/1.61.1` |
-| UI | `http://selenoid.autotests.cloud:8080/` |
+| UI | `https://selenoid.autotests.cloud/` |
 | Status | `https://selenoid.autotests.cloud/status` |
 | Video | `https://selenoid.autotests.cloud/video/` |
 
@@ -29,9 +26,7 @@
 ## Переменные для тестов
 
 ```bash
-export SELENOID_URL=http://user1:1234@selenoid.autotests.cloud/wd/hub
-# Playwright — после auth в nginx для /playwright/:
-# export PW_TEST_CONNECT_WS_ENDPOINT=wss://user1:1234@selenoid.autotests.cloud/playwright/playwright-chromium/1.61.1
+export SELENOID_URL=https://selenoid.autotests.cloud/wd/hub
 export PW_TEST_CONNECT_WS_ENDPOINT=wss://selenoid.autotests.cloud/playwright/playwright-chromium/1.61.1
 ```
 

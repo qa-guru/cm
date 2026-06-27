@@ -1,105 +1,99 @@
 # Configuration Manager (qa-guru fork)
 
-Форк [aerokube/cm](https://github.com/aerokube/cm) для установки [qa-guru/selenoid](https://github.com/qa-guru/selenoid) с Playwright, twilio/selenoid и qaguru/playwright-*.
+Установщик стека **qa-guru/selenoid** — форк [aerokube/cm](https://github.com/aerokube/cm). Одна команда на чистом сервере с Docker поднимает hub, UI, `browsers.json` и browser-образы.
 
-## Что делает
+[![Build Status](https://github.com/qa-guru/cm/workflows/build/badge.svg)](https://github.com/qa-guru/cm/actions?query=workflow%3Abuild)
+[![Go Report Card](https://goreportcard.com/badge/github.com/qa-guru/cm)](https://goreportcard.com/report/github.com/qa-guru/cm)
+[![Release](https://img.shields.io/github/release/qa-guru/cm.svg)](https://github.com/qa-guru/cm/releases/latest)
+[![Docker Pulls](https://img.shields.io/docker/pulls/qaguru/cm.svg)](https://hub.docker.com/r/qaguru/cm)
 
-Одна команда на чистом сервере с Docker:
+| | |
+|---|---|
+| **GitHub** | [qa-guru/cm](https://github.com/qa-guru/cm) |
+| **Docker Hub** | [`qaguru/cm`](https://hub.docker.com/r/qaguru/cm) |
 
-```bash
-./cm selenoid start
-./cm selenoid-ui start
+## Роль в экосистеме
+
+`cm` не содержит логику hub — он **оркестрирует установку** компонентов из других репозиториев:
+
+```
+cm selenoid start
+    ├── скачивает qaguru/selenoid (hub) из GitHub Releases
+    ├── записывает browsers.json (Chrome/Firefox + Playwright)
+    ├── docker pull twilio/selenoid + qaguru/playwright-*
+    └── запускает контейнер hub
+
+cm selenoid-ui start
+    ├── скачивает qaguru/selenoid-ui из GitHub Releases
+    └── запускает контейнер UI, связанный с hub
 ```
 
-1. Скачивает обёрточный образ `qaguru/selenoid-ui:latest-release`
-2. Скачивает бинарники hub и UI из GitHub Releases [qa-guru/selenoid](https://github.com/qa-guru/selenoid) и [qa-guru/selenoid-ui](https://github.com/qa-guru/selenoid-ui)
-3. Записывает встроенный `browsers.json` (Chrome/Firefox + Playwright) в `~/.aerokube/selenoid/`
-4. Тянет все browser-образы из конфига
-5. Запускает контейнеры с примонтированными бинарниками qa-guru
+## Связанные репозитории
 
-## Предварительные условия
+| GitHub | Что делает cm с ним |
+|--------|---------------------|
+| [selenoid](https://github.com/qa-guru/selenoid) | Скачивает бинарник hub, синхронизирует `browsers.json` |
+| [selenoid-ui](https://github.com/qa-guru/selenoid-ui) | Скачивает бинарник UI |
+| **cm** (этот) | Установщик |
+| [playwright-image](https://github.com/qa-guru/playwright-image) | `docker pull qaguru/playwright-*` по `browsers.json` |
 
-- **Docker Engine 26.1.x** (API 1.45) — `cm selenoid start` передаёт hub `DOCKER_API_VERSION=1.45`
-- **Go 1.23.x** — для сборки cm
-- Docker и доступ пользователя к `docker` (группа `docker`)
-- Опубликованные релизы [qa-guru/selenoid](https://github.com/qa-guru/selenoid/releases) и [qa-guru/selenoid-ui](https://github.com/qa-guru/selenoid-ui/releases) (сейчас: **v2.0.2** hub)
+После изменения [`config/browsers.json` в qa-guru/selenoid](https://github.com/qa-guru/selenoid/blob/main/config/browsers.json) обновите копии в этом репозитории:
 
-Альтернатива — локальные бинарники:
+- `selenoid/data/browsers-qaguru.json`
+- `deploy/browsers-production.json`
 
-```bash
-./cm selenoid start \
-  --selenoid-binary /opt/selenoid/bin/selenoid \
-  --selenoid-ui-binary /opt/selenoid/bin/selenoid-ui   # для selenoid-ui start
-```
+## Установка
 
-## Установка на selenoid.autotests.cloud
+**Предварительные условия:** Docker Engine 26.1.x (API 1.45), доступ пользователя к `docker`, опубликованные релизы [qa-guru/selenoid](https://github.com/qa-guru/selenoid/releases) и [qa-guru/selenoid-ui](https://github.com/qa-guru/selenoid-ui/releases). Для сборки cm — Go 1.23.x.
 
-Basic auth для WebDriver: **`user1` / `1234`** (nginx, `/wd/hub` и порт `:4445`). Playwright WS на `:443` без auth — см. [`deploy/nginx-selenoid.conf`](deploy/nginx-selenoid.conf).
+Скачать бинарник из GitHub Releases или собрать локально (см. [Сборка](#сборка)):
 
 ```bash
-# пользователь в группе docker
 curl -sL https://github.com/qa-guru/cm/releases/latest/download/cm_linux_amd64 -o cm
 chmod +x cm
+```
 
+Запуск:
+
+```bash
 ./cm selenoid start
 ./cm selenoid-ui start
 ```
 
-Подключение тестов к публичному hub:
+`cm selenoid start` передаёт hub `DOCKER_API_VERSION=1.45`.
 
-```bash
-export SELENOID_URL=http://user1:1234@selenoid.autotests.cloud/wd/hub
-export PW_TEST_CONNECT_WS_ENDPOINT=wss://user1:1234@selenoid.autotests.cloud/playwright/playwright-chromium/1.61.1
-# Альтернатива, если клиент не принимает user:pass в URL:
-# export PW_TEST_CONNECT_WS_ENDPOINT=wss://selenoid.autotests.cloud/playwright/playwright-chromium/1.61.1
-# export PW_TEST_CONNECT_HEADERS='{"Authorization":"Basic dXNlcjE6MTIzNA=="}'
-```
-
-По умолчанию `cm` скачивает **последний** GitHub Release qa-guru/selenoid и qa-guru/selenoid-ui (`-v` / `--version` не нужен). Как в [документации Aerokube](https://aerokube.com/cm/latest/): `./cm selenoid start`, `./cm selenoid-ui start`.
-
-Явная версия — только если нужен конкретный тег:
-
-```bash
-./cm selenoid start -v v2.0.2
-```
-
-Обновление уже установленного стека:
+Обновление:
 
 ```bash
 ./cm selenoid update
 ./cm selenoid-ui update
-# или перекачать бинарники принудительно:
-./cm selenoid start -f
+./cm selenoid start -f   # принудительно перекачать образы и бинарники
 ```
 
-Nginx для Playwright WebSocket — см. [`deploy/nginx-playwright-snippet.conf`](deploy/nginx-playwright-snippet.conf).
-
-Автодеплой на **selenoid.autotests.cloud** — см. [`deploy/README.md`](deploy/README.md) (GitHub Actions + ручной `./deploy/deploy.sh`).
-
-## Обновление browsers.json в cm
-
-После изменения `selenoid-src/config/browsers.json`:
-
-```bash
-./scripts/sync-cm-browsers.sh
-```
+Production-стек **v2.0.9** (verified): [deploy/RELEASE_v2.0.9.md](deploy/RELEASE_v2.0.9.md). Endpoints и nginx — [`deploy/README.md`](deploy/README.md).
 
 ## Сборка
 
 ```bash
-cd cm-src
-go build -o ../bin/cm .
+go build -o cm .
 ```
 
 ## Флаги
 
 | Флаг | Описание |
 |------|----------|
-| `-v, --version` | Опционально: тег GitHub Release (по умолчанию **latest** — последний релиз) |
+| `-v, --version` | Тег GitHub Release (по умолчанию **latest**) |
 | `-j, --browsers-json` | Свой `browsers.json` вместо встроенного |
-| `--selenoid-binary` | Путь к бинарнику hub |
-| `--selenoid-ui-binary` | Путь к бинарнику UI |
+| `--selenoid-binary` | Путь к бинарнику hub вместо скачивания из Release |
+| `--selenoid-ui-binary` | Путь к бинарнику UI вместо скачивания из Release |
 | `-f, --force` | Перекачать образы и бинарники |
+
+Пример с локальными бинарниками:
+
+```bash
+./cm selenoid start --selenoid-binary /opt/selenoid/bin/selenoid
+./cm selenoid-ui start --selenoid-ui-binary /opt/selenoid/bin/selenoid-ui
+```
 
 ## Структура на сервере
 

@@ -2,8 +2,8 @@
 
 | Компонент | Release | Документация |
 |-----------|---------|--------------|
-| **cm** | [latest](https://github.com/qa-guru/cm/releases/latest) | [cm-src/docs/RELEASE_v2.0.1.md](../docs/RELEASE_v2.0.1.md) |
-| Selenoid hub | [v2.0.2](https://github.com/qa-guru/selenoid/releases/tag/v2.0.2) | [selenoid v2.0.2](https://github.com/qa-guru/selenoid/blob/main/selenoid-src/docs/RELEASE_v2.0.2.md) |
+| **cm** | [latest](https://github.com/qa-guru/cm/releases/latest) | [cm/docs/RELEASE_v2.0.1.md](../docs/RELEASE_v2.0.1.md) |
+| Selenoid hub | [v2.0.2](https://github.com/qa-guru/selenoid/releases/tag/v2.0.2) | [selenoid v2.0.2](https://github.com/qa-guru/selenoid/blob/main/docs/RELEASE_v2.0.2.md) |
 | Selenoid UI | [latest](https://github.com/qa-guru/selenoid-ui/releases/latest) | [selenoid-ui](https://github.com/qa-guru/selenoid-ui/releases) |
 
 Предыдущий стек: [v2.0.1](RELEASE_v2.0.1.md)

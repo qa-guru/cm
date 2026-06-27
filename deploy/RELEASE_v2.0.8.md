@@ -7,7 +7,8 @@
 | Selenoid UI | [v2.0.8](https://github.com/qa-guru/selenoid-ui/releases/tag/v2.0.8) | msedge в UI |
 | Playwright images | `qaguru/playwright-*:1.61.1` | без изменений |
 
-Предыдущий стек: [v2.0.7](RELEASE_v2.0.7.md)
+Предыдущий стек: [v2.0.7](RELEASE_v2.0.7.md)  
+Следующий: [v2.0.9](RELEASE_v2.0.9.md) — обновление документации экосистемы.
 
 ---
 
@@ -46,9 +47,9 @@ SELENOID_VERSION=v2.0.8 SELENOID_UI_VERSION=v2.0.8 ./deploy/deploy.sh
 
 | Протокол | URL |
 |----------|-----|
-| Selenium | `https://user1:1234@selenoid.autotests.cloud/wd/hub` |
+| Selenium | `https://selenoid.autotests.cloud/wd/hub` |
 | Playwright | `wss://selenoid.autotests.cloud/playwright/playwright-chromium/1.61.1` |
-| UI | `https://selenoid.autotests.cloud/` (без auth) |
-| Status | `https://selenoid.autotests.cloud/status` (без auth) |
+| UI | `https://selenoid.autotests.cloud/` |
+| Status | `https://selenoid.autotests.cloud/status` |
 
 WebDriver Edge: `browserName: msedge` или `MicrosoftEdge`, `browserVersion: 145.0`.

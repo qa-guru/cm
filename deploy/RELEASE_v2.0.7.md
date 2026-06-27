@@ -21,12 +21,12 @@
 
 | Изменение | Описание |
 |-----------|----------|
-| **Nginx `/playwright/`** | Basic auth снят — UI WebSocket до hub без credentials в браузере |
+| **Nginx `/playwright/`** | Проксирование Playwright WS через UI |
 | **sync-nginx.sh** | Скрипт в `/tmp` + passwordless sudo из `bootstrap.sh` |
 | **deploy staging** | Файлы в `$HOME/.selenoid-deploy`, не в `/tmp` и не в `/opt/selenoid/bin` |
 | **Docker network** | Пересоздание `selenoid` после `docker system prune` |
 | **cm configure** | Принудительный pull всех образов из `browsers.json` |
-| **smoke-remote.sh** | Проверяет `playwright-chromium`, публичный UI и auth на `/wd/hub` |
+| **smoke-remote.sh** | Проверяет `playwright-chromium`, публичный UI и `/wd/hub` |
 
 ---
 
@@ -52,9 +52,9 @@ SELENOID_VERSION=v2.0.6 SELENOID_UI_VERSION=v2.0.6 ./deploy/deploy.sh
 
 | Протокол | URL |
 |----------|-----|
-| Selenium | `https://user1:1234@selenoid.autotests.cloud/wd/hub` |
-| Playwright | `wss://user1:1234@selenoid.autotests.cloud/playwright/playwright-chromium/1.61.1` |
-| UI | `https://selenoid.autotests.cloud/` (без auth) |
-| Status | `https://selenoid.autotests.cloud/status` (без auth) |
+| Selenium | `https://selenoid.autotests.cloud/wd/hub` |
+| Playwright | `wss://selenoid.autotests.cloud/playwright/playwright-chromium/1.61.1` |
+| UI | `https://selenoid.autotests.cloud/` |
+| Status | `https://selenoid.autotests.cloud/status` |
 
 Playwright-браузеры: `playwright-chromium`, `playwright-firefox`, `playwright-webkit`, `playwright-chrome`, `playwright-msedge`.
