@@ -9,6 +9,8 @@
 
 Предыдущий стек: [v2.0.6](RELEASE_v2.0.6.md)
 
+Следующий: [v2.0.8](RELEASE_v2.0.8.md) — выровненный стек v2.0.8, `msedge`, flaky smoke fix.
+
 **Проверено на prod:** `https://selenoid.autotests.cloud` — smoke `deploy/smoke-remote.sh` проходит.
 
 ---

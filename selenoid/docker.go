@@ -49,7 +49,7 @@ const (
 	Latest                  = "latest"
 	firefox                 = "firefox"
 	android                 = "android"
-	edge                    = "MicrosoftEdge"
+	edge                    = "msedge"
 	opera                   = "opera"
 	tag_1216                = "12.16"
 	selenoidImage           = selenoidWrapperImage

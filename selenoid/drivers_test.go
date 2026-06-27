@@ -66,7 +66,7 @@ func driversMux() http.Handler {
 						},
 					},
 				},
-				"MicrosoftEdge": Browser{
+				"msedge": Browser{
 					Command: "%s",
 					Files: Files{
 						goos: {

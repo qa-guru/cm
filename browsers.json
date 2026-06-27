@@ -116,7 +116,7 @@
     }
   },
 
-  "MicrosoftEdge": {
+  "msedge": {
     "command": "%s --allowed-ips='' --verbose",
     "files": {
       "linux": {

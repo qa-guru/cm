@@ -106,10 +106,10 @@ chmod +x deploy.sh
 ./deploy/remote-update.sh
 ```
 
-Pin версии (опционально, по умолчанию **v2.0.6**):
+Pin версии (опционально, по умолчанию **v2.0.8**):
 
 ```bash
-SELENOID_VERSION=v2.0.6 ./deploy/deploy.sh
+SELENOID_VERSION=v2.0.8 ./deploy/deploy.sh
 ```
 
 ### Проверка
@@ -173,6 +173,7 @@ sudo NGINX_CONF_SRC=/tmp/nginx-selenoid.conf /opt/selenoid/bin/sync-nginx.sh
 
 | Версия | Документация |
 |--------|--------------|
+| v2.0.8 | [RELEASE_v2.0.8.md](RELEASE_v2.0.8.md) — **stack aligned** |
 | v2.0.7 | [RELEASE_v2.0.7.md](RELEASE_v2.0.7.md) — **prod verified** |
 | v2.0.6 | [RELEASE_v2.0.6.md](RELEASE_v2.0.6.md) |
 | v2.0.2 | [RELEASE_v2.0.2.md](RELEASE_v2.0.2.md) |
