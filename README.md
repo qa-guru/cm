@@ -37,10 +37,9 @@ cm selenoid-ui start
 | **cm** (этот) | Установщик |
 | [playwright-image](https://github.com/qa-guru/playwright-image) | `docker pull qaguru/playwright-*` по `browsers.json` |
 
-После изменения [`config/browsers.json` в qa-guru/selenoid](https://github.com/qa-guru/selenoid/blob/main/config/browsers.json) обновите копии в этом репозитории:
+После изменения [`config/browsers.json` в qa-guru/selenoid](https://github.com/qa-guru/selenoid/blob/main/config/browsers.json) обновите копию в этом репозитории:
 
 - `selenoid/data/browsers-qaguru.json`
-- `deploy/browsers-production.json`
 
 ## Установка
 
@@ -70,7 +69,7 @@ chmod +x cm
 ./cm selenoid start -f   # принудительно перекачать образы и бинарники
 ```
 
-Production-стек **v2.0.9** (verified): [deploy/RELEASE_v2.0.9.md](deploy/RELEASE_v2.0.9.md). Endpoints и nginx — [`deploy/README.md`](deploy/README.md).
+Текущий релиз: **v2.1.0** — [GitHub Releases](https://github.com/qa-guru/cm/releases).
 
 ## Сборка
 

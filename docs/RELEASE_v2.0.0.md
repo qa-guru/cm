@@ -64,4 +64,3 @@ chmod +x cm
 
 - [qa-guru/selenoid v2.0.0](https://github.com/qa-guru/selenoid/releases/tag/v2.0.0)
 - [qa-guru/selenoid-ui v2.0.0](https://github.com/qa-guru/selenoid-ui/releases/tag/v2.0.0)
-- [deploy/RELEASE_v2.0.0.md](../deploy/RELEASE_v2.0.0.md) — общий чеклист стека

@@ -12,10 +12,9 @@
 
 | Изменение | Описание |
 |-----------|----------|
-| **Hub v2.0.2 по умолчанию** | `deploy.sh` и `cm selenoid start` тянут hub v2.0.2 (UI остаётся на latest / v2.0.1) |
+| **Hub v2.0.2 по умолчанию** | `cm selenoid start` тянет hub v2.0.2 (UI остаётся на latest / v2.0.1) |
 | **Docker ENTRYPOINT** | Не дублировать бинарник в `cmd` — флаги hub/UI снова применяются в образах aerokube |
-| **Деплой selenoid.autotests.cloud** | Hub как нативный процесс, UI на host network, `/opt/selenoid`, `remote-update.sh` |
-| **Очистка видео** | Скрипт `deploy/cleanup-videos.sh` для cron на сервере |
+| **Production deploy** | Hub как нативный процесс, UI на host network, `/opt/selenoid` |
 
 Связанный hub: [selenoid v2.0.2](https://github.com/qa-guru/selenoid/releases/tag/v2.0.2) — DELETE Playwright session, Docker inspect на хосте.
 
@@ -31,5 +30,3 @@ chmod +x cm
 ./cm selenoid update -c /opt/selenoid
 ./cm selenoid-ui update -c /opt/selenoid
 ```
-
-Или полный деплой: [deploy/RELEASE_v2.0.2.md](../deploy/RELEASE_v2.0.2.md).
