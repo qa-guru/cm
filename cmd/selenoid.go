@@ -11,9 +11,6 @@ import (
 )
 
 var (
-	lastVersions    int
-	tmpfs           int
-	shmSize         int
 	operatingSystem string
 	arch            string
 	version         string
@@ -24,7 +21,6 @@ var (
 	configDir       string
 	uiConfigDir     string
 	skipDownload    bool
-	vnc             bool
 	force           bool
 	graceful        bool
 	gracefulTimeout time.Duration
@@ -140,17 +136,19 @@ func initFlags() {
 		selenoidStartCmd,
 		selenoidUpdateCmd,
 	} {
-		c.Flags().StringVarP(&browsers, "browsers", "b", "", "semicolon separated list of browser names to process")
-		c.Flags().StringVarP(&browserEnv, "browser-env", "w", "", "override container or driver environment variables (e.g. \"KEY1=value1 KEY2=value2\")")
 		c.Flags().StringVarP(&browsersJson, "browsers-json", "j", "", "browsers JSON file to sync with")
-		c.Flags().StringVarP(&driversInfoUrl, "drivers-info", "", selenoid.DefaultDriversInfoURL, "drivers info JSON data URL (in most cases never need to be set manually)")
 		c.Flags().BoolVarP(&skipDownload, "no-download", "n", false, "only output config file without downloading images or drivers")
-		c.Flags().IntVarP(&lastVersions, "last-versions", "l", 2, "process only last N versions (Docker only)")
-		c.Flags().IntVarP(&shmSize, "shm-size", "z", 0, "add shmSize sized in megabytes (Docker only)")
-		c.Flags().IntVarP(&tmpfs, "tmpfs", "t", 0, "add tmpfs volume sized in megabytes (Docker only)")
-		c.Flags().BoolVarP(&vnc, "vnc", "s", false, "deprecated: all browser images already include VNC")
 		c.Flags().StringVar(&selenoidBinary, "selenoid-binary", "", "path to Selenoid binary (default: download from qa-guru/selenoid release)")
 		c.Flags().StringVar(&selenoidUIBinary, "selenoid-ui-binary", "", "path to Selenoid UI binary (default: download from qa-guru/selenoid-ui release)")
+	}
+	for _, c := range []*cobra.Command{
+		selenoidConfigureCmd,
+		selenoidStartCmd,
+		selenoidUpdateCmd,
+	} {
+		c.Flags().StringVarP(&browsers, "browsers", "b", "", "semicolon separated list of browser names (drivers mode only)")
+		c.Flags().StringVarP(&browserEnv, "browser-env", "w", "", "override driver environment variables (drivers mode only, e.g. \"KEY1=value1 KEY2=value2\")")
+		c.Flags().StringVarP(&driversInfoUrl, "drivers-info", "", selenoid.DefaultDriversInfoURL, "drivers info JSON data URL (drivers mode only)")
 	}
 	for _, c := range []*cobra.Command{
 		selenoidDownloadCmd,
@@ -199,12 +197,8 @@ func createLifecycle(configDir string, port uint16) (*selenoid.Lifecycle, error)
 		Port:            int(port),
 		DisableLogs:     disableLogs,
 
-		LastVersions: lastVersions,
 		RegistryUrl:  registry,
 		BrowsersJson: browsersJson,
-		ShmSize:      shmSize,
-		Tmpfs:        tmpfs,
-		VNC:          vnc,
 		UserNS:       userNS,
 
 		SelenoidBinary:   selenoidBinary,

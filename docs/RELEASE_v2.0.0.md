@@ -15,7 +15,7 @@ cm selenoid start -v v2.0.0
 cm selenoid-ui start -v v2.0.0
 ```
 
-1. Пишет встроенный `browsers.json` (twilio/selenoid + qaguru/playwright-*) в `~/.aerokube/selenoid/`
+1. Пишет встроенный `browsers.json` (twilio/selenoid + qaguru/playwright-*) в `/opt/selenoid/`
 2. Тянет browser-образы из конфига
 3. Скачивает бинарники hub и UI из GitHub Releases `qa-guru/selenoid` и `qa-guru/selenoid-ui`
 4. Запускает Docker-контейнеры с примонтированными бинарниками qa-guru

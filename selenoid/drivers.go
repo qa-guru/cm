@@ -20,6 +20,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/aerokube/selenoid/config"
 	"github.com/fatih/color"
 	"github.com/mitchellh/go-ps"
@@ -482,6 +483,37 @@ func outputFile(outputPath string, mode os.FileMode, r io.Reader) error {
 	return nil
 }
 
+const (
+	driversBrowserListSeparator = ";"
+	driversBrowserVersionSeparator = ":"
+)
+
+func parseRequestedBrowsers(logger *Logger, requestedBrowsers string) map[string][]*semver.Constraints {
+	ret := make(map[string][]*semver.Constraints)
+	if requestedBrowsers != "" {
+		for _, section := range strings.Split(requestedBrowsers, driversBrowserListSeparator) {
+			pieces := strings.Split(section, driversBrowserVersionSeparator)
+			if len(pieces) >= 1 {
+				browserName := strings.TrimSpace(pieces[0])
+				if _, ok := ret[browserName]; !ok {
+					ret[browserName] = []*semver.Constraints{}
+				}
+				if len(pieces) == 2 {
+					versionConstraintString := strings.TrimSpace(pieces[1])
+
+					versionConstraint, err := semver.NewConstraint(versionConstraintString)
+					if err != nil {
+						logger.Errorf(`Invalid version constraint %s: %v - ignoring browser "%s"...`, versionConstraintString, err, browserName)
+						continue
+					}
+					ret[browserName] = append(ret[browserName], versionConstraint)
+				}
+			}
+		}
+	}
+	return ret
+}
+
 func (d *DriversConfigurator) downloadDrivers(browsers *Browsers, configDir string) []downloadedDriver {
 	var ret []downloadedDriver
 	browsersToIterate := *browsers
@@ -641,12 +673,14 @@ func (d *DriversConfigurator) Close() error {
 }
 
 func findSelenoidProcesses() []*os.Process {
-	return findProcesses("selenoid")
+	return findProcessesHook("selenoid")
 }
 
 func findSelenoidUIProcesses() []*os.Process {
-	return findProcesses("selenoid-ui")
+	return findProcessesHook("selenoid-ui")
 }
+
+var findProcessesHook = findProcesses
 
 func findProcesses(regex string) []*os.Process {
 	var ret []*os.Process

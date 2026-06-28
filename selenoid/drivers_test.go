@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"testing"
@@ -30,6 +31,10 @@ var (
 	mockDriverServer *httptest.Server
 	releaseFileName  = getSelenoidReleaseFileName()
 )
+
+func testdataPath(name string) string {
+	return filepath.Join("testdata", name)
+}
 
 func init() {
 	mockDriverServer = httptest.NewServer(driversMux())
@@ -118,13 +123,16 @@ func driversMux() http.Handler {
 		},
 	))
 
-	//Serving static files from current directory
-	mux.Handle("/", http.FileServer(http.Dir("")))
+	// Static driver archives for download/unpack tests.
+	mux.Handle("/", http.FileServer(http.Dir("testdata")))
 
 	return mux
 }
 
 func TestAllUrlsAreValid(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping driver URL network check in short mode")
+	}
 
 	dir, err := os.Getwd()
 	assert.NoError(t, err)
@@ -135,7 +143,6 @@ func TestAllUrlsAreValid(t *testing.T) {
 	err = json.Unmarshal(data, &browsers)
 	assert.NoError(t, err)
 
-	//Loops are ugly but we need to check all urls in one test...
 	for _, browser := range browsers {
 		for _, architectures := range browser.Files {
 			for _, driver := range architectures {
@@ -143,11 +150,9 @@ func TestAllUrlsAreValid(t *testing.T) {
 				if u != "" {
 					fmt.Printf("Checking URL: %s\n", u)
 					req, err := http.NewRequest(http.MethodHead, u, nil)
+					assert.NoError(t, err)
 					client := &http.Client{
 						CheckRedirect: func(req *http.Request, via []*http.Request) error {
-							/*
-								Do not follow redirects in order to avoid 403 Forbidden responses from S3 when checking Github releases links
-							*/
 							return http.ErrUseLastResponse
 						},
 					}
@@ -164,8 +169,26 @@ func TestAllUrlsAreValid(t *testing.T) {
 	}
 }
 
-func TestConfigureDrivers(t *testing.T) {
+func TestParseRequestedBrowsers(t *testing.T) {
+	output := parseRequestedBrowsers(&Logger{}, "firefox:>45.0,51.0;opera; android:7.1;firefox:<50.0")
+	assert.Len(t, output, 3)
 
+	ff, ok := output["firefox"]
+	assert.True(t, ok)
+	assert.NotNil(t, ff)
+	assert.Len(t, ff, 2)
+
+	opera, ok := output["opera"]
+	assert.True(t, ok)
+	assert.Empty(t, opera)
+
+	android, ok := output["android"]
+	assert.True(t, ok)
+	assert.NotNil(t, android)
+	assert.Len(t, android, 1)
+}
+
+func TestConfigureDrivers(t *testing.T) {
 	withTmpDir(t, "test-download", func(t *testing.T, dir string) {
 		driversInfoUrl := mockServerUrl(mockDriverServer, "/browsers.json")
 		lcConfig := LifecycleConfig{
@@ -238,7 +261,7 @@ func TestConfigureDrivers(t *testing.T) {
 }
 
 func TestUnzip(t *testing.T) {
-	data := readFile(t, "testfile.zip")
+	data := readFile(t, testdataPath("testfile.zip"))
 	assert.True(t, isZipFile(data))
 	assert.False(t, isTarGzFile(data))
 	testUnpack(t, data, "zip-testfile", func(data []byte, filePath string, outputDir string) (string, error) {
@@ -247,7 +270,7 @@ func TestUnzip(t *testing.T) {
 }
 
 func TestUntar(t *testing.T) {
-	data := readFile(t, "testfile.tar.gz")
+	data := readFile(t, testdataPath("testfile.tar.gz"))
 	assert.True(t, isTarGzFile(data))
 	assert.False(t, isZipFile(data))
 	testUnpack(t, data, "gzip-testfile", func(data []byte, filePath string, outputDir string) (string, error) {
@@ -421,8 +444,10 @@ func TestWrongBaseUrl(t *testing.T) {
 // Based on https://npf.io/2015/06/testing-exec-command/
 func TestStartStopProcess(t *testing.T) {
 	execCommand = fakeExecCommand
+	findProcessesHook = func(_ string) []*os.Process { return nil }
 	defer func() {
 		execCommand = exec.Command
+		findProcessesHook = findProcesses
 	}()
 	withTmpDir(t, "something", func(t *testing.T, dir string) {
 		lcConfig := LifecycleConfig{
@@ -434,7 +459,7 @@ func TestStartStopProcess(t *testing.T) {
 			Port:          DefaultPort,
 		}
 		configurator := NewDriversConfigurator(&lcConfig)
-		assert.True(t, configurator.IsRunning()) //This is probably true because test binary has name selenoid.test; no fake process is launched
+		assert.False(t, configurator.IsRunning())
 		assert.NoError(t, configurator.Start())
 		configurator.Status()
 		assert.NoError(t, configurator.Stop())

@@ -10,7 +10,7 @@ var (
 	registry string
 	rootCmd  = &cobra.Command{
 		Use:   "cm",
-		Short: "cm is a configuration management tool for Aerokube products",
+		Short: "cm is a configuration manager for the qa-guru Selenoid stack",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Usage()
 		},

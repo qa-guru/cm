@@ -37,9 +37,18 @@ cm selenoid-ui start
 | **cm** (этот) | Установщик |
 | [playwright-image](https://github.com/qa-guru/playwright-image) | `docker pull qaguru/playwright-*` по `browsers.json` |
 
-После изменения [`config/browsers.json` в qa-guru/selenoid](https://github.com/qa-guru/selenoid/blob/main/config/browsers.json) обновите копию в этом репозитории:
+## browsers.json
 
-- `selenoid/data/browsers-qaguru.json`
+| Где | Назначение |
+|-----|------------|
+| [`selenoid/config/browsers.json`](https://github.com/qa-guru/selenoid/blob/main/config/browsers.json) | Канонический конфиг стека (hub + browser-образы) |
+| `selenoid/data/browsers-qaguru.json` (этот репо) | Встроенная копия для `cm selenoid configure` / `start` без `-j` |
+| [`selenoid.autotests.cloud/deploy/browsers-production.json`](https://github.com/qa-guru/selenoid.autotests.cloud/blob/main/deploy/browsers-production.json) | Prod: кладётся в `/opt/selenoid/browsers.json` при деплое |
+
+После изменения `config/browsers.json` в **qa-guru/selenoid** синхронизируйте:
+
+1. `selenoid/data/browsers-qaguru.json` в этом репозитории
+2. `deploy/browsers-production.json` в **selenoid.autotests.cloud** (если меняется prod-набор образов)
 
 ## Установка
 
@@ -52,11 +61,19 @@ curl -sL https://github.com/qa-guru/cm/releases/latest/download/cm_linux_amd64 -
 chmod +x cm
 ```
 
-Запуск:
+Запуск (по умолчанию каталог **`/opt/selenoid`**, как на prod):
 
 ```bash
+sudo mkdir -p /opt/selenoid
 ./cm selenoid start
 ./cm selenoid-ui start
+```
+
+Локально без прав на `/opt` — свой каталог:
+
+```bash
+./cm selenoid start -c "$HOME/selenoid"
+./cm selenoid-ui start -c "$HOME/selenoid"
 ```
 
 `cm selenoid start` передаёт hub `DOCKER_API_VERSION=1.45`.
@@ -69,7 +86,7 @@ chmod +x cm
 ./cm selenoid start -f   # принудительно перекачать образы и бинарники
 ```
 
-Текущий релиз: **v2.1.0** — [GitHub Releases](https://github.com/qa-guru/cm/releases).
+Текущий релиз: **v2.1.1** — [GitHub Releases](https://github.com/qa-guru/cm/releases).
 
 ## Сборка
 
@@ -77,7 +94,7 @@ chmod +x cm
 go build -o cm .
 ```
 
-## Флаги
+## Флаги (Docker-режим, по умолчанию)
 
 | Флаг | Описание |
 |------|----------|
@@ -85,7 +102,11 @@ go build -o cm .
 | `-j, --browsers-json` | Свой `browsers.json` вместо встроенного |
 | `--selenoid-binary` | Путь к бинарнику hub вместо скачивания из Release |
 | `--selenoid-ui-binary` | Путь к бинарнику UI вместо скачивания из Release |
+| `-c, --config-dir` | Каталог данных (default: **`/opt/selenoid`**) |
 | `-f, --force` | Перекачать образы и бинарники |
+| `-n, --no-download` | Только записать `browsers.json`, без `docker pull` |
+
+Флаги `--browsers`, `--browser-env`, `--drivers-info` — только для режима `--use-drivers` (локальные WebDriver-бинарники без Docker).
 
 Пример с локальными бинарниками:
 
@@ -97,7 +118,7 @@ go build -o cm .
 ## Структура на сервере
 
 ```
-~/.aerokube/selenoid/
+/opt/selenoid/
   browsers.json
   bin/selenoid
   bin/selenoid-ui

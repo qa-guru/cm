@@ -6,7 +6,7 @@ on:
       version:
         description: 'Docker image tag (e.g. v2.0.5 or latest-release)'
         required: true
-        default: 'v2.0.5'
+        default: 'v2.1.0'
 
 permissions:
   contents: read

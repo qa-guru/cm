@@ -8,10 +8,7 @@ import (
 )
 
 func TestGetConfigDir(t *testing.T) {
-	selenoidConfigDir := GetSelenoidConfigDir()
-	assert.NotEmpty(t, selenoidConfigDir)
-	assert.True(t, filepath.IsAbs(selenoidConfigDir))
-	selenoidUIConfigDir := GetSelenoidUIConfigDir()
-	assert.NotEmpty(t, selenoidUIConfigDir)
-	assert.True(t, filepath.IsAbs(selenoidUIConfigDir))
+	assert.Equal(t, DefaultConfigDir, GetSelenoidConfigDir())
+	assert.Equal(t, DefaultConfigDir, GetSelenoidUIConfigDir())
+	assert.True(t, filepath.IsAbs(GetSelenoidConfigDir()))
 }

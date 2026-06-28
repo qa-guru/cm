@@ -21,8 +21,6 @@ import (
 	"time"
 
 	"github.com/docker/docker/api"
-	"github.com/docker/go-units"
-
 	"github.com/Masterminds/semver/v3"
 	"github.com/aerokube/selenoid/config"
 	authconfig "github.com/docker/cli/cli/config"
@@ -44,14 +42,7 @@ import (
 )
 
 const (
-	semicolon               = ";"
-	colon                   = ":"
-	Latest                  = "latest"
-	firefox                 = "firefox"
-	android                 = "android"
-	edge                    = "msedge"
-	opera                   = "opera"
-	tag_1216                = "12.16"
+	Latest                = "latest"
 	selenoidImage           = selenoidWrapperImage
 	selenoidUIImage         = selenoidUIWrapperImage
 	videoRecorderImage      = "selenoid/video-recorder:latest-release"
@@ -70,10 +61,8 @@ type DockerConfigurator struct {
 	ConfigDirAware
 	VersionAware
 	DownloadAware
-	RequestedBrowsersAware
 	ArgsAware
 	EnvAware
-	BrowserEnvAware
 	PortAware
 	UserNSAware
 	LogsAware
@@ -84,45 +73,34 @@ type DockerConfigurator struct {
 	Arch                 string
 	SelenoidBinaryPath   string
 	SelenoidUIBinaryPath string
-	LastVersions         int
-	Pull         bool
-	RegistryUrl  string
-	BrowsersJson string
-	ShmSize      int
-	Tmpfs        int
-	VNC          bool
-	docker       *client.Client
-	reg          *registry.Registry
-	authConfig   *configtypes.AuthConfig
-	registryHost string
+	RegistryUrl          string
+	BrowsersJson         string
+	docker               *client.Client
+	reg                  *registry.Registry
+	authConfig           *configtypes.AuthConfig
+	registryHost         string
 }
 
 func NewDockerConfigurator(config *LifecycleConfig) (*DockerConfigurator, error) {
 	c := &DockerConfigurator{
-		Logger:                 Logger{Quiet: config.Quiet},
-		ConfigDirAware:         ConfigDirAware{ConfigDir: config.ConfigDir},
-		VersionAware:           VersionAware{Version: config.Version},
-		DownloadAware:          DownloadAware{DownloadNeeded: config.Download},
-		RequestedBrowsersAware: RequestedBrowsersAware{Browsers: config.Browsers},
-		ArgsAware:              ArgsAware{Args: config.Args},
-		EnvAware:               EnvAware{Env: config.Env},
-		BrowserEnvAware:        BrowserEnvAware{BrowserEnv: config.BrowserEnv},
-		PortAware:              PortAware{Port: config.Port},
-		UserNSAware:            UserNSAware{UserNS: config.UserNS},
-		LogsAware:              LogsAware{DisableLogs: config.DisableLogs},
-		GracefulAware:          GracefulAware{Graceful: config.Graceful, GracefulTimeout: config.GracefulTimeout},
-		Forceable:              Forceable{Force: config.Force},
-		GithubBaseUrl:          config.GithubBaseUrl,
-		OS:                     config.OS,
-		Arch:                   config.Arch,
-		SelenoidBinaryPath:     config.SelenoidBinary,
-		SelenoidUIBinaryPath:   config.SelenoidUIBinary,
-		RegistryUrl:            config.RegistryUrl,
-		BrowsersJson:           config.BrowsersJson,
-		LastVersions:           config.LastVersions,
-		ShmSize:                config.ShmSize,
-		Tmpfs:                  config.Tmpfs,
-		VNC:                    config.VNC,
+		Logger:           Logger{Quiet: config.Quiet},
+		ConfigDirAware:   ConfigDirAware{ConfigDir: config.ConfigDir},
+		VersionAware:     VersionAware{Version: config.Version},
+		DownloadAware:    DownloadAware{DownloadNeeded: config.Download},
+		ArgsAware:        ArgsAware{Args: config.Args},
+		EnvAware:         EnvAware{Env: config.Env},
+		PortAware:        PortAware{Port: config.Port},
+		UserNSAware:      UserNSAware{UserNS: config.UserNS},
+		LogsAware:        LogsAware{DisableLogs: config.DisableLogs},
+		GracefulAware:    GracefulAware{Graceful: config.Graceful, GracefulTimeout: config.GracefulTimeout},
+		Forceable:        Forceable{Force: config.Force},
+		GithubBaseUrl:    config.GithubBaseUrl,
+		OS:               config.OS,
+		Arch:             config.Arch,
+		SelenoidBinaryPath:   config.SelenoidBinary,
+		SelenoidUIBinaryPath: config.SelenoidUIBinary,
+		RegistryUrl:      config.RegistryUrl,
+		BrowsersJson:     config.BrowsersJson,
 	}
 	if c.Quiet {
 		log.SetFlags(0)
@@ -416,86 +394,6 @@ func (c *DockerConfigurator) Configure() (*SelenoidConfig, error) {
 	return c.configureEmbeddedBrowsers()
 }
 
-func (c *DockerConfigurator) createConfig() SelenoidConfig {
-	requestedBrowsers := parseRequestedBrowsers(&c.Logger, c.Browsers)
-	browsersToIterate := c.getBrowsersToIterate(requestedBrowsers)
-	browsers := make(map[string]config.Versions)
-	for browserName, img := range browsersToIterate {
-		c.Titlef(`Processing browser "%v"...`, color.GreenString(browserName))
-		tags := c.fetchImageTags(img)
-		if c.VNC {
-			c.Pointf("Requested to download VNC images but this feature is now deprecated as all images contain VNC.")
-		}
-		versionConstraint := requestedBrowsers[browserName]
-		pulledTags := c.filterTags(tags, versionConstraint)
-		fullyQualifiedImage := c.getFullyQualifiedImageRef(img)
-		if c.DownloadNeeded {
-			pulledTags = c.pullImages(fullyQualifiedImage, pulledTags)
-		}
-
-		if len(pulledTags) > 0 {
-			browsers[browserName] = c.createVersions(browserName, fullyQualifiedImage, pulledTags)
-		}
-	}
-	if c.DownloadNeeded {
-		c.pullVideoRecorderImage()
-	}
-	return browsers
-}
-
-func parseRequestedBrowsers(logger *Logger, requestedBrowsers string) map[string][]*semver.Constraints {
-	ret := make(map[string][]*semver.Constraints)
-	if requestedBrowsers != "" {
-		for _, section := range strings.Split(requestedBrowsers, semicolon) {
-			pieces := strings.Split(section, colon)
-			if len(pieces) >= 1 {
-				browserName := strings.TrimSpace(pieces[0])
-				if _, ok := ret[browserName]; !ok {
-					ret[browserName] = []*semver.Constraints{}
-				}
-				if len(pieces) == 2 {
-					versionConstraintString := strings.TrimSpace(pieces[1])
-
-					versionConstraint, err := semver.NewConstraint(versionConstraintString)
-					if err != nil {
-						logger.Errorf(`Invalid version constraint %s: %v - ignoring browser "%s"...`, versionConstraintString, err, browserName)
-						continue
-					}
-					ret[browserName] = append(ret[browserName], versionConstraint)
-				}
-			}
-		}
-	}
-	return ret
-}
-
-func (c *DockerConfigurator) getBrowsersToIterate(requestedBrowsers map[string][]*semver.Constraints) map[string]string {
-	defaultBrowsers := map[string]string{
-		"firefox": "selenoid/firefox",
-		"chrome":  "selenoid/chrome",
-		"opera":   "selenoid/opera",
-	}
-	if len(requestedBrowsers) > 0 {
-		if _, ok := requestedBrowsers[android]; ok {
-			defaultBrowsers[android] = "selenoid/android"
-		}
-		if _, ok := requestedBrowsers[edge]; ok {
-			defaultBrowsers[edge] = "browsers/edge"
-		}
-		ret := make(map[string]string)
-		for browserName := range requestedBrowsers {
-			if img, ok := defaultBrowsers[browserName]; ok {
-				ret[browserName] = img
-				continue
-			}
-			c.Errorf("Unsupported browser: %s", browserName)
-		}
-
-		return ret
-	}
-	return defaultBrowsers
-}
-
 func (c *DockerConfigurator) fetchImageTags(image string) []string {
 	c.Pointf(`Fetching tags for image %v`, color.BlueString(image))
 	reg := c.getRegistryClient()
@@ -524,75 +422,8 @@ func filterOutLatest(tags []string) []string {
 	return ret
 }
 
-func (c *DockerConfigurator) filterTags(tags []string, versionConstraints []*semver.Constraints) []string {
-	if len(versionConstraints) > 0 {
-		var ret []string
-		for _, tag := range tags {
-			version, err := semver.NewVersion(tag)
-			if err != nil {
-				c.Errorf("Skipping tag %s as it does not follow semantic versioning: %v", tag, err)
-				continue
-			}
-			for _, vc := range versionConstraints {
-				if vc.Check(version) {
-					ret = append(ret, tag)
-				}
-			}
-		}
-		return ret
-	} else if c.LastVersions > 0 && c.LastVersions <= len(tags) {
-		return tags[:c.LastVersions]
-	}
-	return tags
-}
-
-func (c *DockerConfigurator) createVersions(browserName string, image string, tags []string) config.Versions {
-	versions := config.Versions{
-		Default:  tags[0],
-		Versions: make(map[string]*config.Browser),
-	}
-	for _, tag := range tags {
-		version := tag
-		browser := &config.Browser{
-			Image: imageWithTag(image, tag),
-			Port:  "4444",
-			Path:  "/",
-		}
-		if browserName == firefox || browserName == android || (browserName == opera && version == tag_1216) {
-			browser.Path = "/wd/hub"
-		}
-		if c.Tmpfs > 0 {
-			tmpfs := make(map[string]string)
-			tmpfs["/tmp"] = fmt.Sprintf("size=%dm", c.Tmpfs)
-			browser.Tmpfs = tmpfs
-		}
-		if c.ShmSize > 0 {
-			browser.ShmSize, _ = units.RAMInBytes(fmt.Sprintf("%dm", c.ShmSize))
-		}
-		browserEnv := strings.Fields(c.BrowserEnv)
-		if len(browserEnv) > 0 {
-			browser.Env = browserEnv
-		}
-		versions.Versions[version] = browser
-	}
-	return versions
-}
-
 func imageWithTag(image string, tag string) string {
 	return fmt.Sprintf("%s:%s", image, tag)
-}
-
-func (c *DockerConfigurator) pullImages(image string, tags []string) []string {
-	var pulledTags []string
-	ctx := context.Background()
-	for _, tag := range tags {
-		ref := imageWithTag(image, tag)
-		if !c.pullImage(ctx, ref) {
-			continue
-		}
-		pulledTags = append(pulledTags, tag)
-	}
-	return pulledTags
 }
 
 func (c *DockerConfigurator) pullVideoRecorderImage() {

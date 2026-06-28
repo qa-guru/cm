@@ -27,12 +27,8 @@ type LifecycleConfig struct {
 	DisableLogs     bool
 
 	// Docker specific
-	LastVersions int
 	RegistryUrl  string
 	BrowsersJson string
-	ShmSize      int
-	Tmpfs        int
-	VNC          bool
 	UserNS       string
 
 	SelenoidBinary   string

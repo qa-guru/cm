@@ -286,20 +286,6 @@ func TestFetchImageTags(t *testing.T) {
 	assert.Equal(t, tags[2], "7.0")
 }
 
-func TestPullImages(t *testing.T) {
-	lcConfig := LifecycleConfig{
-		RegistryUrl: mockDockerServer.URL,
-		Quiet:       false,
-	}
-	c, err := NewDockerConfigurator(&lcConfig)
-	assert.NoError(t, err)
-	defer c.Close()
-	tags := c.pullImages("selenoid/firefox", []string{"46.0", "45.0"})
-	assert.Len(t, tags, 2)
-	assert.Equal(t, tags[0], "46.0")
-	assert.Equal(t, tags[1], "45.0")
-}
-
 func TestConfigureDocker(t *testing.T) {
 	testConfigure(t, true)
 }
@@ -326,10 +312,15 @@ func testConfigure(t *testing.T, download bool) {
 		assert.NotNil(t, cfgPointer)
 
 		cfg := *cfgPointer
-		assert.Len(t, cfg, 5)
+		assert.Len(t, cfg, 8)
 		assert.Contains(t, cfg, "chrome")
+		assert.Contains(t, cfg, "firefox")
+		assert.Contains(t, cfg, "msedge")
 		assert.Contains(t, cfg, "playwright-chromium")
 		assert.Contains(t, cfg, "playwright-firefox")
+		assert.Contains(t, cfg, "playwright-webkit")
+		assert.Contains(t, cfg, "playwright-chrome")
+		assert.Contains(t, cfg, "playwright-msedge")
 	})
 }
 
@@ -572,23 +563,4 @@ func TestPostProcessPath(t *testing.T) {
 func TestValidEnviron(t *testing.T) {
 	assert.Equal(t, validateEnviron([]string{"=::=::"}), []string{})
 	assert.Equal(t, validateEnviron([]string{"HOMEDRIVE=C:", "DOCKER_HOST=192.168.0.1", "=::=::"}), []string{"HOMEDRIVE=C:", "DOCKER_HOST=192.168.0.1"})
-}
-
-func TestParseRequestedBrowsers(t *testing.T) {
-	output := parseRequestedBrowsers(&Logger{}, "firefox:>45.0,51.0;opera; android:7.1;firefox:<50.0")
-	assert.Len(t, output, 3)
-
-	ff, ok := output["firefox"]
-	assert.True(t, ok)
-	assert.NotNil(t, ff)
-	assert.Len(t, ff, 2)
-
-	opera, ok := output["opera"]
-	assert.True(t, ok)
-	assert.Empty(t, opera)
-
-	android, ok := output["android"]
-	assert.True(t, ok)
-	assert.NotNil(t, android)
-	assert.Len(t, android, 1)
 }

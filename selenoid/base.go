@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/user"
 	"path/filepath"
 	"time"
 
@@ -135,17 +134,10 @@ type LogsAware struct {
 const (
 	DefaultPort           = 4444
 	UIDefaultPort         = 8080
+	DefaultConfigDir      = "/opt/selenoid"
 	DefaultRegistryUrl    = "https://index.docker.io"
-	DefaultDriversInfoURL = "https://raw.githubusercontent.com/aerokube/cm/master/browsers.json"
+	DefaultDriversInfoURL = "https://raw.githubusercontent.com/qa-guru/cm/main/browsers.json"
 )
-
-func getHomeDir() string {
-	usr, err := user.Current()
-	if err != nil {
-		return ""
-	}
-	return usr.HomeDir
-}
 
 func joinPaths(baseDir string, elem []string) string {
 	p := filepath.Join(append([]string{baseDir}, elem...)...)
@@ -153,15 +145,12 @@ func joinPaths(baseDir string, elem []string) string {
 	return ap
 }
 
-var (
-	selenoidConfigDirElem   = []string{".aerokube", "selenoid"}
-	selenoidUIConfigDirElem = []string{".aerokube", "selenoid-ui"}
-)
+var selenoidConfigDirElem = []string{"opt", "selenoid"}
 
 func GetSelenoidConfigDir() string {
-	return joinPaths(getHomeDir(), selenoidConfigDirElem)
+	return DefaultConfigDir
 }
 
 func GetSelenoidUIConfigDir() string {
-	return joinPaths(getHomeDir(), selenoidUIConfigDirElem)
+	return GetSelenoidConfigDir()
 }
