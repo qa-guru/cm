@@ -86,19 +86,23 @@ func (ms *MockStrategy) Close() error {
 }
 
 func TestDockerUnavailable(t *testing.T) {
-	assert.False(t, isDockerAvailable())
+	t.Run("Docker unavailable", func(t *testing.T) {
+		assert.False(t, isDockerAvailable())
+	})
 }
 
 func TestDockerAvailable(t *testing.T) {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/_ping", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
-	mockDockerServer := httptest.NewServer(mux)
-	_ = os.Setenv("DOCKER_HOST", "tcp://"+hostPort(mockDockerServer.URL))
-	defer os.Unsetenv("DOCKER_HOST")
+	t.Run("Docker available", func(t *testing.T) {
+		mux := http.NewServeMux()
+		mux.HandleFunc("/_ping", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})
+		mockDockerServer := httptest.NewServer(mux)
+		_ = os.Setenv("DOCKER_HOST", "tcp://"+hostPort(mockDockerServer.URL))
+		defer os.Unsetenv("DOCKER_HOST")
 
-	assert.True(t, isDockerAvailable())
+		assert.True(t, isDockerAvailable())
+	})
 }
 
 func hostPort(input string) string {
@@ -110,18 +114,20 @@ func hostPort(input string) string {
 }
 
 func TestLifecycle(t *testing.T) {
-	strategy := MockStrategy{}
-	lc := createTestLifecycle(strategy)
-	defer lc.Close()
-	lc.Status()
-	assert.NoError(t, lc.Download())
-	assert.NoError(t, lc.PrintArgs())
-	assert.NoError(t, lc.Configure())
-	assert.NoError(t, lc.Start())
-	strategy.isRunning = true
-	assert.NoError(t, lc.Start())
-	strategy.isRunning = false
-	assert.NoError(t, lc.Stop())
+	t.Run("Lifecycle", func(t *testing.T) {
+		strategy := MockStrategy{}
+		lc := createTestLifecycle(strategy)
+		defer lc.Close()
+		lc.Status()
+		assert.NoError(t, lc.Download())
+		assert.NoError(t, lc.PrintArgs())
+		assert.NoError(t, lc.Configure())
+		assert.NoError(t, lc.Start())
+		strategy.isRunning = true
+		assert.NoError(t, lc.Start())
+		strategy.isRunning = false
+		assert.NoError(t, lc.Stop())
+	})
 }
 
 func createTestLifecycle(strategy MockStrategy) Lifecycle {
@@ -139,15 +145,17 @@ func createTestLifecycle(strategy MockStrategy) Lifecycle {
 }
 
 func TestUILifecycle(t *testing.T) {
-	strategy := MockStrategy{}
-	lc := createTestLifecycle(strategy)
-	defer lc.Close()
-	lc.UIStatus()
-	assert.NoError(t, lc.DownloadUI())
-	assert.NoError(t, lc.PrintUIArgs())
-	assert.NoError(t, lc.StartUI())
-	strategy.isRunning = true
-	assert.NoError(t, lc.StartUI())
-	strategy.isRunning = false
-	assert.NoError(t, lc.StopUI())
+	t.Run("UI lifecycle", func(t *testing.T) {
+		strategy := MockStrategy{}
+		lc := createTestLifecycle(strategy)
+		defer lc.Close()
+		lc.UIStatus()
+		assert.NoError(t, lc.DownloadUI())
+		assert.NoError(t, lc.PrintUIArgs())
+		assert.NoError(t, lc.StartUI())
+		strategy.isRunning = true
+		assert.NoError(t, lc.StartUI())
+		strategy.isRunning = false
+		assert.NoError(t, lc.StopUI())
+	})
 }
