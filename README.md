@@ -20,7 +20,7 @@
 cm selenoid start
     ├── скачивает qaguru/selenoid (hub) из GitHub Releases
     ├── записывает browsers.json (Chrome/Firefox + Playwright)
-    ├── docker pull twilio/selenoid + qaguru/playwright-*
+    ├── docker pull qaguru/webdriver-chrome + qaguru/playwright-*
     └── запускает контейнер hub
 
 cm selenoid-ui start

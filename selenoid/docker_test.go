@@ -320,10 +320,8 @@ func testConfigure(t *testing.T, download bool) {
 		assert.NotNil(t, cfgPointer)
 
 		cfg := *cfgPointer
-		assert.Len(t, cfg, 8)
+		assert.Len(t, cfg, 6)
 		assert.Contains(t, cfg, "chrome")
-		assert.Contains(t, cfg, "firefox")
-		assert.Contains(t, cfg, "msedge")
 		assert.Contains(t, cfg, "playwright-chromium")
 		assert.Contains(t, cfg, "playwright-firefox")
 		assert.Contains(t, cfg, "playwright-webkit")
