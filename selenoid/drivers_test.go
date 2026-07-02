@@ -130,152 +130,162 @@ func driversMux() http.Handler {
 }
 
 func TestAllUrlsAreValid(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping driver URL network check in short mode")
-	}
+	t.Run("All urls are valid", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping driver URL network check in short mode")
+		}
 
-	dir, err := os.Getwd()
-	assert.NoError(t, err)
+		dir, err := os.Getwd()
+		assert.NoError(t, err)
 
-	data := readFile(t, path.Join(dir, "..", "browsers.json"))
+		data := readFile(t, path.Join(dir, "..", "browsers.json"))
 
-	var browsers Browsers
-	err = json.Unmarshal(data, &browsers)
-	assert.NoError(t, err)
+		var browsers Browsers
+		err = json.Unmarshal(data, &browsers)
+		assert.NoError(t, err)
 
-	for _, browser := range browsers {
-		for _, architectures := range browser.Files {
-			for _, driver := range architectures {
-				u := driver.URL
-				if u != "" {
-					fmt.Printf("Checking URL: %s\n", u)
-					req, err := http.NewRequest(http.MethodHead, u, nil)
-					assert.NoError(t, err)
-					client := &http.Client{
-						CheckRedirect: func(req *http.Request, via []*http.Request) error {
-							return http.ErrUseLastResponse
-						},
-					}
-					resp, err := client.Do(req)
-					if err != nil {
-						t.Fatalf("failed to request url %s: %v\n", u, err)
-					}
-					if resp.StatusCode != 200 && resp.StatusCode != 301 && resp.StatusCode != 302 {
-						t.Fatalf("broken url %s: %d", u, resp.StatusCode)
+		for _, browser := range browsers {
+			for _, architectures := range browser.Files {
+				for _, driver := range architectures {
+					u := driver.URL
+					if u != "" {
+						fmt.Printf("Checking URL: %s\n", u)
+						req, err := http.NewRequest(http.MethodHead, u, nil)
+						assert.NoError(t, err)
+						client := &http.Client{
+							CheckRedirect: func(req *http.Request, via []*http.Request) error {
+								return http.ErrUseLastResponse
+							},
+						}
+						resp, err := client.Do(req)
+						if err != nil {
+							t.Fatalf("failed to request url %s: %v\n", u, err)
+						}
+						if resp.StatusCode != 200 && resp.StatusCode != 301 && resp.StatusCode != 302 {
+							t.Fatalf("broken url %s: %d", u, resp.StatusCode)
+						}
 					}
 				}
 			}
 		}
-	}
+	})
 }
 
 func TestParseRequestedBrowsers(t *testing.T) {
-	output := parseRequestedBrowsers(&Logger{}, "firefox:>45.0,51.0;opera; android:7.1;firefox:<50.0")
-	assert.Len(t, output, 3)
+	t.Run("Parse requested browsers", func(t *testing.T) {
+		output := parseRequestedBrowsers(&Logger{}, "firefox:>45.0,51.0;opera; android:7.1;firefox:<50.0")
+		assert.Len(t, output, 3)
 
-	ff, ok := output["firefox"]
-	assert.True(t, ok)
-	assert.NotNil(t, ff)
-	assert.Len(t, ff, 2)
+		ff, ok := output["firefox"]
+		assert.True(t, ok)
+		assert.NotNil(t, ff)
+		assert.Len(t, ff, 2)
 
-	opera, ok := output["opera"]
-	assert.True(t, ok)
-	assert.Empty(t, opera)
+		opera, ok := output["opera"]
+		assert.True(t, ok)
+		assert.Empty(t, opera)
 
-	android, ok := output["android"]
-	assert.True(t, ok)
-	assert.NotNil(t, android)
-	assert.Len(t, android, 1)
+		android, ok := output["android"]
+		assert.True(t, ok)
+		assert.NotNil(t, android)
+		assert.Len(t, android, 1)
+	})
 }
 
 func TestConfigureDrivers(t *testing.T) {
-	withTmpDir(t, "test-download", func(t *testing.T, dir string) {
-		driversInfoUrl := mockServerUrl(mockDriverServer, "/browsers.json")
-		lcConfig := LifecycleConfig{
-			ConfigDir:      dir,
-			Browsers:       "first;second;safari;fourth",
-			DriversInfoUrl: driversInfoUrl,
-			Download:       true,
-			Quiet:          false,
-			Args:           "-limit 42",
-			Env:            testEnv,
-			BrowserEnv:     testEnv,
-		}
-		configurator := NewDriversConfigurator(&lcConfig)
-		assert.False(t, configurator.IsConfigured())
-		cfgPointer, err := (*configurator).Configure()
-		assert.NoError(t, err)
-		assert.NotNil(t, cfgPointer)
-
-		cfg := *cfgPointer
-		assert.Len(t, cfg, 3)
-
-		unpackedFirstFile := path.Join(dir, "zip-testfile")
-		unpackedSecondFile := path.Join(dir, "gzip-testfile")
-		correctConfig := SelenoidConfig{
-			"first": config.Versions{
-				Default: Latest,
-				Versions: map[string]*config.Browser{
-					Latest: {
-						Image: []string{unpackedFirstFile},
-						Path:  "/",
-						Env:   []string{testEnv},
-					},
-				},
-			},
-			"second": config.Versions{
-				Default: Latest,
-				Versions: map[string]*config.Browser{
-					Latest: {
-						Image: []string{unpackedSecondFile},
-						Path:  "/",
-						Env:   []string{testEnv},
-					},
-				},
-			},
-			"safari": config.Versions{
-				Default: Latest,
-				Versions: map[string]*config.Browser{
-					Latest: {
-						Image: []string{"/usr/bin/safaridriver"},
-						Path:  "/",
-						Env:   []string{testEnv},
-					},
-				},
-			},
-		}
-
-		if !reflect.DeepEqual(cfg, correctConfig) {
-			cfgData, _ := json.MarshalIndent(cfg, "", "    ")
-			correctConfigData, _ := json.MarshalIndent(correctConfig, "", "    ")
-			t.Fatalf("Incorrect config. Expected:\n %+v\n Actual: %+v\n", string(correctConfigData), string(cfgData))
-		}
-
-		for _, unpackedFile := range []string{unpackedFirstFile, unpackedSecondFile} {
-			if !fileExists(unpackedFile) {
-				t.Fatalf("file %s does not exist\n", unpackedFile)
+	t.Run("Configure drivers", func(t *testing.T) {
+		withTmpDir(t, "test-download", func(t *testing.T, dir string) {
+			driversInfoUrl := mockServerUrl(mockDriverServer, "/browsers.json")
+			lcConfig := LifecycleConfig{
+				ConfigDir:      dir,
+				Browsers:       "first;second;safari;fourth",
+				DriversInfoUrl: driversInfoUrl,
+				Download:       true,
+				Quiet:          false,
+				Args:           "-limit 42",
+				Env:            testEnv,
+				BrowserEnv:     testEnv,
 			}
-		}
+			configurator := NewDriversConfigurator(&lcConfig)
+			assert.False(t, configurator.IsConfigured())
+			cfgPointer, err := (*configurator).Configure()
+			assert.NoError(t, err)
+			assert.NotNil(t, cfgPointer)
+
+			cfg := *cfgPointer
+			assert.Len(t, cfg, 3)
+
+			unpackedFirstFile := path.Join(dir, "zip-testfile")
+			unpackedSecondFile := path.Join(dir, "gzip-testfile")
+			correctConfig := SelenoidConfig{
+				"first": config.Versions{
+					Default: Latest,
+					Versions: map[string]*config.Browser{
+						Latest: {
+							Image: []string{unpackedFirstFile},
+							Path:  "/",
+							Env:   []string{testEnv},
+						},
+					},
+				},
+				"second": config.Versions{
+					Default: Latest,
+					Versions: map[string]*config.Browser{
+						Latest: {
+							Image: []string{unpackedSecondFile},
+							Path:  "/",
+							Env:   []string{testEnv},
+						},
+					},
+				},
+				"safari": config.Versions{
+					Default: Latest,
+					Versions: map[string]*config.Browser{
+						Latest: {
+							Image: []string{"/usr/bin/safaridriver"},
+							Path:  "/",
+							Env:   []string{testEnv},
+						},
+					},
+				},
+			}
+
+			if !reflect.DeepEqual(cfg, correctConfig) {
+				cfgData, _ := json.MarshalIndent(cfg, "", "    ")
+				correctConfigData, _ := json.MarshalIndent(correctConfig, "", "    ")
+				t.Fatalf("Incorrect config. Expected:\n %+v\n Actual: %+v\n", string(correctConfigData), string(cfgData))
+			}
+
+			for _, unpackedFile := range []string{unpackedFirstFile, unpackedSecondFile} {
+				if !fileExists(unpackedFile) {
+					t.Fatalf("file %s does not exist\n", unpackedFile)
+				}
+			}
+		})
 	})
 
 }
 
 func TestUnzip(t *testing.T) {
-	data := readFile(t, testdataPath("testfile.zip"))
-	assert.True(t, isZipFile(data))
-	assert.False(t, isTarGzFile(data))
-	testUnpack(t, data, "zip-testfile", func(data []byte, filePath string, outputDir string) (string, error) {
-		return unzip(data, filePath, outputDir)
-	}, "zip\n")
+	t.Run("Unzip", func(t *testing.T) {
+		data := readFile(t, testdataPath("testfile.zip"))
+		assert.True(t, isZipFile(data))
+		assert.False(t, isTarGzFile(data))
+		testUnpack(t, data, "zip-testfile", func(data []byte, filePath string, outputDir string) (string, error) {
+			return unzip(data, filePath, outputDir)
+		}, "zip\n")
+	})
 }
 
 func TestUntar(t *testing.T) {
-	data := readFile(t, testdataPath("testfile.tar.gz"))
-	assert.True(t, isTarGzFile(data))
-	assert.False(t, isZipFile(data))
-	testUnpack(t, data, "gzip-testfile", func(data []byte, filePath string, outputDir string) (string, error) {
-		return untar(data, filePath, outputDir)
-	}, "gzip\n")
+	t.Run("Untar", func(t *testing.T) {
+		data := readFile(t, testdataPath("testfile.tar.gz"))
+		assert.True(t, isTarGzFile(data))
+		assert.False(t, isZipFile(data))
+		testUnpack(t, data, "gzip-testfile", func(data []byte, filePath string, outputDir string) (string, error) {
+			return untar(data, filePath, outputDir)
+		}, "gzip\n")
+	})
 }
 
 func testUnpack(t *testing.T, data []byte, fileName string, fn func([]byte, string, string) (string, error), correctContents string) {
@@ -307,12 +317,14 @@ func readFile(t *testing.T, fileName string) []byte {
 }
 
 func TestDownloadFile(t *testing.T) {
-	fileUrl := mockServerUrl(mockDriverServer, "/testfile")
-	data, err := downloadFile(fileUrl)
-	if err != nil {
-		t.Fatalf("failed to download file: %v\n", err)
-	}
-	assert.Equal(t, string(data), "test-data")
+	t.Run("Download file", func(t *testing.T) {
+		fileUrl := mockServerUrl(mockDriverServer, "/testfile")
+		data, err := downloadFile(fileUrl)
+		if err != nil {
+			t.Fatalf("failed to download file: %v\n", err)
+		}
+		assert.Equal(t, string(data), "test-data")
+	})
 }
 
 func mockServerUrl(mockServer *httptest.Server, relativeUrl string) string {
@@ -352,11 +364,15 @@ func getReleaseHandler(v string) func(http.ResponseWriter, *http.Request) {
 }
 
 func TestDownloadLatestRelease(t *testing.T) {
-	testDownloadRelease(t, Latest, latestReleaseTag)
+	t.Run("Download latest release", func(t *testing.T) {
+		testDownloadRelease(t, Latest, latestReleaseTag)
+	})
 }
 
 func TestDownloadSpecificRelease(t *testing.T) {
-	testDownloadRelease(t, previousReleaseTag, previousReleaseTag)
+	t.Run("Download specific release", func(t *testing.T) {
+		testDownloadRelease(t, previousReleaseTag, previousReleaseTag)
+	})
 }
 
 func testDownloadRelease(t *testing.T, desiredVersion string, expectedFileContents string) {
@@ -395,15 +411,17 @@ func checkContentsEqual(t *testing.T, outputPath string, expectedFileContents st
 }
 
 func TestUnknownRelease(t *testing.T) {
-	downloadShouldFail(t, func(dir string) *DriversConfigurator {
-		lcConfig := LifecycleConfig{
-			GithubBaseUrl: mockDriverServer.URL,
-			ConfigDir:     dir,
-			OS:            runtime.GOOS,
-			Arch:          runtime.GOARCH,
-			Version:       "missing-version",
-		}
-		return NewDriversConfigurator(&lcConfig)
+	t.Run("Unknown release", func(t *testing.T) {
+		downloadShouldFail(t, func(dir string) *DriversConfigurator {
+			lcConfig := LifecycleConfig{
+				GithubBaseUrl: mockDriverServer.URL,
+				ConfigDir:     dir,
+				OS:            runtime.GOOS,
+				Arch:          runtime.GOARCH,
+				Version:       "missing-version",
+			}
+			return NewDriversConfigurator(&lcConfig)
+		})
 	})
 }
 
@@ -416,61 +434,67 @@ func downloadShouldFail(t *testing.T, fn func(string) *DriversConfigurator) {
 }
 
 func TestUnavailableBinary(t *testing.T) {
-	downloadShouldFail(t, func(dir string) *DriversConfigurator {
-		lcConfig := LifecycleConfig{
-			GithubBaseUrl: mockDriverServer.URL,
-			ConfigDir:     dir,
-			OS:            "missing-os",
-			Arch:          "missing-arch",
-			Version:       previousReleaseTag,
-		}
-		return NewDriversConfigurator(&lcConfig)
+	t.Run("Unavailable binary", func(t *testing.T) {
+		downloadShouldFail(t, func(dir string) *DriversConfigurator {
+			lcConfig := LifecycleConfig{
+				GithubBaseUrl: mockDriverServer.URL,
+				ConfigDir:     dir,
+				OS:            "missing-os",
+				Arch:          "missing-arch",
+				Version:       previousReleaseTag,
+			}
+			return NewDriversConfigurator(&lcConfig)
+		})
 	})
 }
 
 func TestWrongBaseUrl(t *testing.T) {
-	downloadShouldFail(t, func(dir string) *DriversConfigurator {
-		lcConfig := LifecycleConfig{
-			GithubBaseUrl: ":::bad-url:::",
-			ConfigDir:     dir,
-			OS:            runtime.GOOS,
-			Arch:          runtime.GOARCH,
-			Version:       Latest,
-		}
-		return NewDriversConfigurator(&lcConfig)
+	t.Run("Wrong base URL", func(t *testing.T) {
+		downloadShouldFail(t, func(dir string) *DriversConfigurator {
+			lcConfig := LifecycleConfig{
+				GithubBaseUrl: ":::bad-url:::",
+				ConfigDir:     dir,
+				OS:            runtime.GOOS,
+				Arch:          runtime.GOARCH,
+				Version:       Latest,
+			}
+			return NewDriversConfigurator(&lcConfig)
+		})
 	})
 }
 
 // Based on https://npf.io/2015/06/testing-exec-command/
 func TestStartStopProcess(t *testing.T) {
-	execCommand = fakeExecCommand
-	findProcessesHook = func(_ string) []*os.Process { return nil }
-	defer func() {
-		execCommand = exec.Command
-		findProcessesHook = findProcesses
-	}()
-	withTmpDir(t, "something", func(t *testing.T, dir string) {
-		lcConfig := LifecycleConfig{
-			GithubBaseUrl: mockDriverServer.URL,
-			ConfigDir:     dir,
-			OS:            runtime.GOOS,
-			Arch:          runtime.GOARCH,
-			Version:       Latest,
-			Port:          DefaultPort,
-		}
-		configurator := NewDriversConfigurator(&lcConfig)
-		assert.False(t, configurator.IsRunning())
-		assert.NoError(t, configurator.Start())
-		configurator.Status()
-		assert.NoError(t, configurator.Stop())
-		assert.NoError(t, configurator.PrintArgs())
+	t.Run("Based on https://npf.io/2015/06/testing-exec-command/", func(t *testing.T) {
+		execCommand = fakeExecCommand
+		findProcessesHook = func(_ string) []*os.Process { return nil }
+		defer func() {
+			execCommand = exec.Command
+			findProcessesHook = findProcesses
+		}()
+		withTmpDir(t, "something", func(t *testing.T, dir string) {
+			lcConfig := LifecycleConfig{
+				GithubBaseUrl: mockDriverServer.URL,
+				ConfigDir:     dir,
+				OS:            runtime.GOOS,
+				Arch:          runtime.GOARCH,
+				Version:       Latest,
+				Port:          DefaultPort,
+			}
+			configurator := NewDriversConfigurator(&lcConfig)
+			assert.False(t, configurator.IsRunning())
+			assert.NoError(t, configurator.Start())
+			configurator.Status()
+			assert.NoError(t, configurator.Stop())
+			assert.NoError(t, configurator.PrintArgs())
 
-		lcConfig.Port = UIDefaultPort
-		assert.False(t, configurator.IsUIRunning())
-		assert.NoError(t, configurator.StartUI())
-		configurator.UIStatus()
-		assert.NoError(t, configurator.StopUI())
-		assert.NoError(t, configurator.PrintUIArgs())
+			lcConfig.Port = UIDefaultPort
+			assert.False(t, configurator.IsUIRunning())
+			assert.NoError(t, configurator.StartUI())
+			configurator.UIStatus()
+			assert.NoError(t, configurator.StopUI())
+			assert.NoError(t, configurator.PrintUIArgs())
+		})
 	})
 
 }
@@ -484,11 +508,13 @@ func fakeExecCommand(command string, args ...string) *exec.Cmd {
 }
 
 func TestPrepareCommand(t *testing.T) {
-	assert.Equal(
-		t,
-		prepareCommand("%s --some-arg", "/path/with spaces"),
-		[]string{
-			"/path/with spaces", "--some-arg",
-		},
-	)
+	t.Run("Prepare command", func(t *testing.T) {
+		assert.Equal(
+			t,
+			prepareCommand("%s --some-arg", "/path/with spaces"),
+			[]string{
+				"/path/with spaces", "--some-arg",
+			},
+		)
+	})
 }
