@@ -30,6 +30,8 @@ jobs:
 
       - name: Build
         run: ci/build.sh
+        env:
+          GOTOOLCHAIN: go1.26.4+auto
 
       - name: Latest image
         continue-on-error: true
