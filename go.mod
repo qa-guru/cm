@@ -2,6 +2,8 @@ module github.com/aerokube/cm
 
 go 1.26
 
+toolchain go1.26.0
+
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/aerokube/selenoid v0.0.0-20240520175821-773c202b01e3
