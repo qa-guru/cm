@@ -13,9 +13,11 @@ jobs:
   golang:
     runs-on: ubuntu-latest
     env:
-      GOTOOLCHAIN: auto
+      GOTOOLCHAIN: go1.26.4+auto
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Setup Golang
         uses: actions/setup-go@v6
@@ -25,8 +27,6 @@ jobs:
 
       - name: Test
         run: ci/test.sh
-        env:
-          GOTOOLCHAIN: auto
 
       - name: Build
         run: ci/build.sh
