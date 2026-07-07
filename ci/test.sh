@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
+set -e
+
+export GOTOOLCHAIN=go1.26.4+auto
 export GO111MODULE="on"
 go test -race -v github.com/aerokube/cm/selenoid -coverprofile=coverage.txt -covermode=atomic -coverpkg github.com/aerokube/cm/selenoid
 
-go install golang.org/x/vuln/cmd/govulncheck@latest
-if ! env -u GITHUB_ACTIONS "$(go env GOPATH)"/bin/govulncheck ./...; then
-	echo "::warning::govulncheck reported vulnerabilities (non-blocking for release)"
-fi
+GOTOOLCHAIN=go1.26.4 go run golang.org/x/vuln/cmd/govulncheck@v1.5.0 ./...

@@ -20,18 +20,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/docker/docker/api"
 	"github.com/Masterminds/semver/v3"
 	"github.com/aerokube/selenoid/config"
-	authconfig "github.com/docker/cli/cli/config"
-	configtypes "github.com/docker/cli/cli/config/types"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/docker/api/types/image"
-	"github.com/docker/docker/api/types/network"
-	"github.com/docker/docker/api/types/strslice"
-	"github.com/docker/docker/client"
+	ctr "github.com/moby/moby/api/types/container"
+	img "github.com/moby/moby/api/types/image"
+	"github.com/moby/moby/api/types/network"
+	"github.com/moby/moby/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/heroku/docker-registry-client/registry"
 	"github.com/mattn/go-colorable"
@@ -51,7 +45,7 @@ const (
 	selenoidUIContainerName = "selenoid-ui"
 	overrideHome            = "OVERRIDE_HOME"
 	dockerApiVersion        = "DOCKER_API_VERSION"
-	selenoidDockerAPI       = "1.45" // matches github.com/docker/docker v26.1.5 in hub
+	selenoidDockerAPI       = "1.55" // matches github.com/moby/moby/client v0.5.0
 )
 
 type SelenoidConfig map[string]config.Versions
@@ -77,7 +71,7 @@ type DockerConfigurator struct {
 	BrowsersJson         string
 	docker               *client.Client
 	reg                  *registry.Registry
-	authConfig           *configtypes.AuthConfig
+	authConfig           *dockerAuthConfig
 	registryHost         string
 }
 
@@ -124,13 +118,13 @@ func createCompatibleDockerClient(onVersionSpecified, onVersionDetermined, onUsi
 	if dockerApiVersionEnv != "" {
 		onVersionSpecified(dockerApiVersionEnv)
 	} else {
-		maxMajorVersion, maxMinorVersion := parseVersion(api.DefaultVersion)
+		maxMajorVersion, maxMinorVersion := parseVersion(client.MaxAPIVersion)
 		minMajorVersion, minMinorVersion := parseVersion("1.24")
 		for majorVersion := maxMajorVersion; majorVersion >= minMajorVersion; majorVersion-- {
 			for minorVersion := maxMinorVersion; minorVersion >= minMinorVersion; minorVersion-- {
 				apiVersion := fmt.Sprintf("%d.%d", majorVersion, minorVersion)
 				_ = os.Setenv(dockerApiVersion, apiVersion)
-				docker, err := client.NewClientWithOpts(client.FromEnv)
+				docker, err := client.New(client.FromEnv)
 				if err != nil {
 					return nil, err
 				}
@@ -141,9 +135,9 @@ func createCompatibleDockerClient(onVersionSpecified, onVersionDetermined, onUsi
 				_ = docker.Close()
 			}
 		}
-		onUsingDefaultVersion(api.DefaultVersion)
+		onUsingDefaultVersion(client.MaxAPIVersion)
 	}
-	return client.NewClientWithOpts(client.FromEnv)
+	return client.New(client.FromEnv)
 }
 
 func parseVersion(ver string) (int, int) {
@@ -162,7 +156,7 @@ func parseVersion(ver string) (int, int) {
 
 func isDockerAPIVersionCorrect(docker *client.Client) bool {
 	ctx := context.Background()
-	apiInfo, err := docker.ServerVersion(ctx)
+	apiInfo, err := docker.ServerVersion(ctx, client.ServerVersionOptions{})
 	if err != nil {
 		return false
 	}
@@ -188,8 +182,8 @@ func (c *DockerConfigurator) initDockerClient() error {
 	return nil
 }
 
-func (c *DockerConfigurator) initAuthConfig() (*configtypes.AuthConfig, error) {
-	configFile, err := authconfig.Load("")
+func (c *DockerConfigurator) initAuthConfig() (*dockerAuthConfig, error) {
+	authConfigs, err := loadDockerAuthConfigs()
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +196,7 @@ func (c *DockerConfigurator) initAuthConfig() (*configtypes.AuthConfig, error) {
 	if c.RegistryUrl != DefaultRegistryUrl {
 		c.registryHost = registryHost
 	}
-	if cfg, ok := configFile.AuthConfigs[registryHost]; ok {
+	if cfg, ok := authConfigs[registryHost]; ok {
 		c.Titlef(`Loaded authentication data for "%s"`, registryHost)
 		return &cfg, nil
 	}
@@ -287,7 +281,7 @@ func (c *DockerConfigurator) IsDownloaded() bool {
 	return c.getSelenoidImage() != nil
 }
 
-func (c *DockerConfigurator) getSelenoidImage() *image.Summary {
+func (c *DockerConfigurator) getSelenoidImage() *img.Summary {
 	return c.getImage(selenoidWrapperImage, wrapperImageTag)
 }
 
@@ -295,20 +289,20 @@ func (c *DockerConfigurator) IsUIDownloaded() bool {
 	return c.getSelenoidUIImage() != nil
 }
 
-func (c *DockerConfigurator) getSelenoidUIImage() *image.Summary {
+func (c *DockerConfigurator) getSelenoidUIImage() *img.Summary {
 	return c.getImage(selenoidUIWrapperImage, wrapperImageTag)
 }
 
-func (c *DockerConfigurator) getImage(name string, version string) *image.Summary {
-	images, err := c.docker.ImageList(context.Background(), image.ListOptions{})
+func (c *DockerConfigurator) getImage(name string, version string) *img.Summary {
+	result, err := c.docker.ImageList(context.Background(), client.ImageListOptions{})
 	if err != nil {
 		c.Errorf("Failed to list images: %v", err)
 		return nil
 	}
-	return findMatchingImage(images, name, version)
+	return findMatchingImage(result.Items, name, version)
 }
 
-func findMatchingImage(images []image.Summary, name string, version string) *image.Summary {
+func findMatchingImage(images []img.Summary, name string, version string) *img.Summary {
 	sort.Slice(images, func(i, j int) bool {
 		return images[i].Created > images[j].Created
 	})
@@ -462,7 +456,7 @@ type JSONProgress struct {
 
 func (c *DockerConfigurator) pullImage(ctx context.Context, ref string) bool {
 	c.Pointf("Pulling image %v", color.BlueString(ref))
-	pullOptions := image.PullOptions{}
+	pullOptions := client.ImagePullOptions{}
 	if c.authConfig != nil {
 		buf, err := json.Marshal(c.authConfig)
 		if err != nil {
@@ -520,7 +514,7 @@ func (c *DockerConfigurator) IsRunning() bool {
 	return c.getSelenoidContainer() != nil
 }
 
-func (c *DockerConfigurator) getSelenoidContainer() *types.Container {
+func (c *DockerConfigurator) getSelenoidContainer() *ctr.Summary {
 	return c.getContainer(selenoidContainerName)
 }
 
@@ -528,19 +522,18 @@ func (c *DockerConfigurator) IsUIRunning() bool {
 	return c.getSelenoidUIContainer() != nil
 }
 
-func (c *DockerConfigurator) getSelenoidUIContainer() *types.Container {
+func (c *DockerConfigurator) getSelenoidUIContainer() *ctr.Summary {
 	return c.getContainer(selenoidUIContainerName)
 }
 
-func (c *DockerConfigurator) getContainer(name string) *types.Container {
-	f := filters.NewArgs()
-	f.Add("name", fmt.Sprintf("^/%s$", name))
-	containers, err := c.docker.ContainerList(context.Background(), container.ListOptions{Filters: f})
+func (c *DockerConfigurator) getContainer(name string) *ctr.Summary {
+	f := client.Filters{}.Add("name", fmt.Sprintf("^/%s$", name))
+	result, err := c.docker.ContainerList(context.Background(), client.ContainerListOptions{Filters: f})
 	if err != nil {
 		return nil
 	}
-	if len(containers) > 0 {
-		return &containers[0]
+	if len(result.Items) > 0 {
+		return &result.Items[0]
 	}
 	return nil
 }
@@ -792,7 +785,7 @@ func validateEnviron(envs []string) []string {
 
 type containerConfig struct {
 	Name        string
-	Image       *image.Summary
+	Image       *img.Summary
 	HostPort    int
 	ServicePort int
 	Volumes     []string
@@ -823,23 +816,27 @@ func (c *DockerConfigurator) startContainer(cfg *containerConfig) error {
 	if err != nil {
 		return fmt.Errorf("failed to configure container network: %v", err)
 	}
-	containerConfig := container.Config{
+	containerConfig := ctr.Config{
 		Hostname: "localhost",
 		Image:    cfg.Image.RepoTags[0],
 		Env:      env,
 	}
 	if cfg.ServicePort > 0 {
-		containerConfig.ExposedPorts = map[nat.Port]struct{}{port: {}}
+		exposedPorts, portErr := networkPortSet(map[nat.Port]struct{}{port: {}})
+		if portErr != nil {
+			return fmt.Errorf("failed to convert exposed ports: %v", portErr)
+		}
+		containerConfig.ExposedPorts = exposedPorts
 	}
 	if len(cfg.Cmd) > 0 {
-		containerConfig.Cmd = strslice.StrSlice(cfg.Cmd)
+		containerConfig.Cmd = cfg.Cmd
 	}
-	hostConfig := container.HostConfig{
+	hostConfig := ctr.HostConfig{
 		Binds:       cfg.Volumes,
-		NetworkMode: networkName,
+		NetworkMode: ctr.NetworkMode(networkName),
 	}
 	if cfg.UserNS != "" {
-		mode := container.UsernsMode(cfg.UserNS)
+		mode := ctr.UsernsMode(cfg.UserNS)
 		if !mode.Valid() {
 			return fmt.Errorf("invalid userns value: %s", cfg.UserNS)
 		}
@@ -848,31 +845,37 @@ func (c *DockerConfigurator) startContainer(cfg *containerConfig) error {
 	if cfg.PrintLogs {
 		containerConfig.Tty = true
 	} else {
-		hostConfig.RestartPolicy = container.RestartPolicy{
+		hostConfig.RestartPolicy = ctr.RestartPolicy{
 			Name: "always",
 		}
 	}
 	if cfg.HostPort > 0 && cfg.ServicePort > 0 {
 		hostPortString := strconv.Itoa(cfg.HostPort)
-		portBindings := nat.PortMap{}
-		portBindings[port] = []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: hostPortString}}
+		portBindings, portErr := networkPortMap(nat.PortMap{
+			port: {{HostIP: "0.0.0.0", HostPort: hostPortString}},
+		})
+		if portErr != nil {
+			return fmt.Errorf("failed to convert port bindings: %v", portErr)
+		}
 		hostConfig.PortBindings = portBindings
 	}
-	ctr, err := c.docker.ContainerCreate(ctx,
-		&containerConfig,
-		&hostConfig,
-		&network.NetworkingConfig{}, nil, cfg.Name)
+	created, err := c.docker.ContainerCreate(ctx, client.ContainerCreateOptions{
+		Name:             cfg.Name,
+		Config:           &containerConfig,
+		HostConfig:       &hostConfig,
+		NetworkingConfig: &network.NetworkingConfig{},
+	})
 	if err != nil {
 		return fmt.Errorf("failed to create container: %v", err)
 	}
-	err = c.docker.ContainerStart(ctx, ctr.ID, container.StartOptions{})
+	_, err = c.docker.ContainerStart(ctx, created.ID, client.ContainerStartOptions{})
 	if err != nil {
-		_ = c.removeContainer(ctr.ID)
+		_ = c.removeContainer(created.ID)
 		return fmt.Errorf("failed to start container: %v", err)
 	}
 	if cfg.PrintLogs {
-		defer c.removeContainer(ctr.ID)
-		r, err := c.docker.ContainerLogs(ctx, ctr.ID, container.LogsOptions{
+		defer c.removeContainer(created.ID)
+		r, err := c.docker.ContainerLogs(ctx, created.ID, client.ContainerLogsOptions{
 			ShowStdout: true,
 			ShowStderr: true,
 		})
@@ -887,9 +890,9 @@ func (c *DockerConfigurator) startContainer(cfg *containerConfig) error {
 
 func (c *DockerConfigurator) createNetworkIfNeeded(networkName string) error {
 	ctx := context.Background()
-	_, err := c.docker.NetworkInspect(ctx, networkName, types.NetworkInspectOptions{})
+	_, err := c.docker.NetworkInspect(ctx, networkName, client.NetworkInspectOptions{})
 	if err != nil {
-		_, err = c.docker.NetworkCreate(ctx, networkName, types.NetworkCreate{})
+		_, err = c.docker.NetworkCreate(ctx, networkName, client.NetworkCreateOptions{})
 		if err != nil {
 			return fmt.Errorf("failed to create custom network %s: %v", networkName, err)
 		}
@@ -900,14 +903,16 @@ func (c *DockerConfigurator) createNetworkIfNeeded(networkName string) error {
 func (c *DockerConfigurator) removeContainer(id string) error {
 	ctx := context.Background()
 	if c.Graceful {
-		timeout := int(c.GracefulTimeout.Milliseconds() / 1000)
-		err := c.docker.ContainerStop(ctx, id, container.StopOptions{Timeout: &timeout})
+		timeout := int(c.GracefulTimeout.Seconds())
+		_, err := c.docker.ContainerStop(ctx, id, client.ContainerStopOptions{Timeout: &timeout})
 		if err == nil {
-			return c.docker.ContainerRemove(ctx, id, container.RemoveOptions{RemoveVolumes: true})
+			_, err = c.docker.ContainerRemove(ctx, id, client.ContainerRemoveOptions{RemoveVolumes: true})
+			return err
 		}
 		return err
 	}
-	return c.docker.ContainerRemove(ctx, id, container.RemoveOptions{RemoveVolumes: true, Force: true})
+	_, err := c.docker.ContainerRemove(ctx, id, client.ContainerRemoveOptions{RemoveVolumes: true, Force: true})
+	return err
 }
 
 func (c *DockerConfigurator) Stop() error {

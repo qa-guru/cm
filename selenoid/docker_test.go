@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/aerokube/selenoid/config"
-	"github.com/docker/docker/api/types/image"
+	img "github.com/moby/moby/api/types/image"
 	assert "github.com/stretchr/testify/require"
 )
 
@@ -497,23 +497,23 @@ func TestFindMatchingImage(t *testing.T) {
 	t.Run("Find matching image", func(t *testing.T) {
 
 		var (
-			selenoid141 = image.Summary{
+			selenoid141 = img.Summary{
 				ID:       "1",
 				RepoTags: []string{"qaguru/selenoid:1.4.1"},
 				Created:  100,
 			}
-			selenoid143 = image.Summary{
+			selenoid143 = img.Summary{
 				ID:       "3",
 				RepoTags: []string{"qaguru/selenoid:1.4.3"},
 				Created:  300,
 			}
-			selenoid120CustomRegistry = image.Summary{
+			selenoid120CustomRegistry = img.Summary{
 				ID:       "4",
 				RepoTags: []string{"my-registry.com:443/qaguru/selenoid:1.2.0"},
 				Created:  100,
 			}
 		)
-		images := []image.Summary{
+		images := []img.Summary{
 			selenoid141,
 			{
 				ID:       "2",
