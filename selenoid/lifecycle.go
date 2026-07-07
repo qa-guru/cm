@@ -7,7 +7,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/client"
 	"github.com/fatih/color"
 )
 
@@ -252,11 +252,11 @@ func (l *Lifecycle) StopUI() error {
 }
 
 func isDockerAvailable() bool {
-	cl, err := client.NewClientWithOpts(client.FromEnv)
+	cl, err := client.New(client.FromEnv)
 	if err != nil {
 		return false
 	}
-	_, err = cl.Ping(context.Background())
+	_, err = cl.Ping(context.Background(), client.PingOptions{})
 	return err == nil
 }
 
