@@ -17,9 +17,9 @@ jobs:
   golang:
     runs-on: ubuntu-latest
     outputs:
-      release_version: ${{ steps.release_meta.outputs.version }}
+      release_version: ${{ steps.release_meta.outputs.release_version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Setup Golang
         uses: actions/setup-go@v6
@@ -41,10 +41,10 @@ jobs:
           else
             version="${GITHUB_REF#refs/tags/}"
           fi
-          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "release_version=${version}" >> "$GITHUB_OUTPUT"
           echo "RELEASE_VERSION=${version}" >> "$GITHUB_ENV"
 
-      - uses: AButler/upload-release-assets@v3.0
+      - uses: AButler/upload-release-assets@v4.0
         if: github.event_name == 'release'
         with:
           files: 'dist/*'
@@ -67,6 +67,9 @@ jobs:
     name: Release smoke → selenoid-tests
     needs: golang
     if: success()
+    permissions:
+      actions: read
+      contents: read
     uses: ./.github/workflows/smoke-trigger-callback.yml
     secrets:
       SELENOID_TESTS_DISPATCH_TOKEN: ${{ secrets.SELENOID_TESTS_DISPATCH_TOKEN }}
