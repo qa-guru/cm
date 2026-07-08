@@ -2,7 +2,7 @@ module github.com/aerokube/cm
 
 go 1.26
 
-toolchain go1.26.4
+toolchain go1.26.5
 
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
