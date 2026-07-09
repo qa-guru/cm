@@ -801,7 +801,7 @@ func (c *DockerConfigurator) startContainer(cfg *containerConfig) error {
 	env := validateEnviron(os.Environ())
 	env = append(env, fmt.Sprintf("TZ=%s", time.Local))
 	if len(cfg.OverrideEnv) > 0 {
-		env = cfg.OverrideEnv
+		env = append(env, cfg.OverrideEnv...)
 	}
 	if !contains(env, dockerApiVersion) {
 		env = append(env, fmt.Sprintf("%s=%s", dockerApiVersion, selenoidDockerAPI))
