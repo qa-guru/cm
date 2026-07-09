@@ -39,7 +39,7 @@ const (
 	Latest                = "latest"
 	selenoidImage           = selenoidWrapperImage
 	selenoidUIImage         = selenoidUIWrapperImage
-	videoRecorderImage      = "selenoid/video-recorder:latest-release"
+	videoRecorderImage      = "qaguru/video-recorder:latest"
 	selenoidContainerName   = "selenoid"
 	ggrUIContainerName      = "ggr-ui"
 	selenoidUIContainerName = "selenoid-ui"
