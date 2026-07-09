@@ -752,7 +752,7 @@ containers:
 		cmd = append(cmd, "-browsers-conf", "/etc/selenoid/browsers.json")
 	}
 	if !contains(cmd, "-listen") && !contains(cmd, "--listen") {
-		cmd = append(cmd, fmt.Sprintf("-listen=:%d", c.Port))
+		cmd = append(cmd, fmt.Sprintf("-listen=:%d", UIDefaultPort))
 	}
 	// qaguru/selenoid-ui image sets ENTRYPOINT to /selenoid-ui; prepending the
 	// binary again makes Go flag.Parse stop at the duplicate argv and ignore flags.
