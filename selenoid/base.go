@@ -132,11 +132,10 @@ type LogsAware struct {
 }
 
 const (
-	DefaultPort           = 4444
-	UIDefaultPort         = 8080
-	DefaultConfigDir      = "/opt/selenoid"
-	DefaultRegistryUrl    = "https://index.docker.io"
-	DefaultDriversInfoURL = "https://raw.githubusercontent.com/qa-guru/cm/main/browsers.json"
+	DefaultPort        = 4444
+	UIDefaultPort      = 8080
+	DefaultConfigDir   = "/opt/selenoid"
+	DefaultRegistryUrl = "https://index.docker.io"
 )
 
 func joinPaths(baseDir string, elem []string) string {

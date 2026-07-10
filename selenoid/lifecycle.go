@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/moby/moby/client"
@@ -61,6 +62,9 @@ func NewLifecycle(config *LifecycleConfig) (*Lifecycle, error) {
 		Config:    config,
 	}
 	if config.UseDrivers {
+		if strings.TrimSpace(config.DriversInfoUrl) == "" {
+			return nil, errors.New("drivers mode requires --drivers-info URL (qa-guru/cm does not ship a drivers catalog; use Docker mode by default)")
+		}
 		lc.Titlef("Using driver binaries...")
 		driversCfg := NewDriversConfigurator(config)
 		lc.argsAware = driversCfg

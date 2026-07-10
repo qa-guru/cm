@@ -148,7 +148,7 @@ func initFlags() {
 	} {
 		c.Flags().StringVarP(&browsers, "browsers", "b", "", "semicolon separated list of browser names (drivers mode only)")
 		c.Flags().StringVarP(&browserEnv, "browser-env", "w", "", "override driver environment variables (drivers mode only, e.g. \"KEY1=value1 KEY2=value2\")")
-		c.Flags().StringVarP(&driversInfoUrl, "drivers-info", "", selenoid.DefaultDriversInfoURL, "drivers info JSON data URL (drivers mode only)")
+		c.Flags().StringVarP(&driversInfoUrl, "drivers-info", "", "", "drivers catalog JSON URL (required with --use-drivers)")
 	}
 	for _, c := range []*cobra.Command{
 		selenoidDownloadCmd,

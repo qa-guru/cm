@@ -38,17 +38,18 @@ cm selenoid-ui start
 | **cm** (этот) | Установщик |
 | [browser-image](https://github.com/qa-guru/browser-image) | `docker pull qaguru/webdriver-*` / `qaguru/playwright-*` по `browsers.json` |
 
-## browsers.json — один SSOT (Docker) + drivers catalog
+## browsers.json — SSOT (Docker)
 
 | Где | Назначение |
 |-----|------------|
 | `dev/browsers.json` (selenoid-home) | **SSOT** полный Docker-каталог (`qaguru/*` images) |
 | `selenoid/data/browsers.json` (этот репо, go:embed) | Копия SSOT для `cm selenoid configure` / `start` без `-j` |
 | [`selenoid/config/browsers.json`](https://github.com/qa-guru/selenoid/blob/main/config/browsers.json) | Копия SSOT на hub |
-| [`browsers.json`](browsers.json) (корень этого репо) | **Не** SSOT: drivers-mode (`cm selenoid start --drivers`), CfT/geckodriver URLs; chrome CfT **149.0.7827.55** |
 | [`selenoid.autotests.cloud/deploy/browsers-production.json`](https://github.com/qa-guru/selenoid.autotests.cloud/blob/main/deploy/browsers-production.json) | Prod overlay (только по явному prod-запросу) |
 
-Правки Docker-каталога — в `dev/browsers.json`, затем `dev/scripts/sync-cm-browsers.sh` (не трогает корневой drivers `browsers.json`).
+Правки Docker-каталога — в `dev/browsers.json`, затем `dev/scripts/sync-cm-browsers.sh`.
+
+Режим `--use-drivers` (локальные chromedriver/geckodriver без Docker) **не поддерживается из коробки** — нужен свой JSON-каталог и флаг `--drivers-info <url>`. Для стека qa-guru используйте Docker-режим (по умолчанию).
 
 ## Установка
 
@@ -107,7 +108,7 @@ go build -o cm .
 | `-f, --force` | Перекачать образы и бинарники |
 | `-n, --no-download` | Только записать `browsers.json`, без `docker pull` |
 
-Флаги `--browsers`, `--browser-env`, `--drivers-info` — только для режима `--use-drivers` (локальные WebDriver-бинарники без Docker).
+Флаги `--browsers`, `--browser-env`, `--drivers-info` — только для режима `--use-drivers`; `--drivers-info` обязателен (собственный каталог chromedriver/geckodriver).
 
 Пример с локальными бинарниками:
 

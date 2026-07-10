@@ -129,48 +129,6 @@ func driversMux() http.Handler {
 	return mux
 }
 
-func TestAllUrlsAreValid(t *testing.T) {
-	t.Run("All urls are valid", func(t *testing.T) {
-		if testing.Short() {
-			t.Skip("skipping driver URL network check in short mode")
-		}
-
-		dir, err := os.Getwd()
-		assert.NoError(t, err)
-
-		data := readFile(t, path.Join(dir, "..", "browsers.json"))
-
-		var browsers Browsers
-		err = json.Unmarshal(data, &browsers)
-		assert.NoError(t, err)
-
-		for _, browser := range browsers {
-			for _, architectures := range browser.Files {
-				for _, driver := range architectures {
-					u := driver.URL
-					if u != "" {
-						fmt.Printf("Checking URL: %s\n", u)
-						req, err := http.NewRequest(http.MethodHead, u, nil)
-						assert.NoError(t, err)
-						client := &http.Client{
-							CheckRedirect: func(req *http.Request, via []*http.Request) error {
-								return http.ErrUseLastResponse
-							},
-						}
-						resp, err := client.Do(req)
-						if err != nil {
-							t.Fatalf("failed to request url %s: %v\n", u, err)
-						}
-						if resp.StatusCode != 200 && resp.StatusCode != 301 && resp.StatusCode != 302 {
-							t.Fatalf("broken url %s: %d", u, resp.StatusCode)
-						}
-					}
-				}
-			}
-		}
-	})
-}
-
 func TestParseRequestedBrowsers(t *testing.T) {
 	t.Run("Parse requested browsers", func(t *testing.T) {
 		output := parseRequestedBrowsers(&Logger{}, "firefox:>45.0,51.0;opera; android:7.1;firefox:<50.0")
