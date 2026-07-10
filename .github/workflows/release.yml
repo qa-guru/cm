@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release tag (for manual docker push only)'
-        required: false
-        default: 'latest-release'
+        description: 'Release tag for manual publish (e.g. v2.2.0)'
+        required: true
+        default: 'v2.2.0'
 
 permissions:
   contents: write
@@ -47,9 +47,10 @@ jobs:
           echo "RELEASE_VERSION=${version}" >> "$GITHUB_ENV"
 
       - uses: AButler/upload-release-assets@v4.0
-        if: github.event_name == 'release'
+        if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
         with:
           files: 'dist/*'
+          release-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.event.release.tag_name }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release image
