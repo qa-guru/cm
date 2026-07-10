@@ -45,7 +45,7 @@ const (
 	selenoidUIContainerName = "selenoid-ui"
 	overrideHome            = "OVERRIDE_HOME"
 	dockerApiVersion        = "DOCKER_API_VERSION"
-	selenoidDockerAPI       = "1.55" // matches github.com/moby/moby/client v0.5.0
+	selenoidDockerAPI       = "1.45" // canon: Engine 26.1.x / prod Debian 10
 )
 
 type SelenoidConfig map[string]config.Versions

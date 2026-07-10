@@ -12,11 +12,11 @@ import (
 	"github.com/fatih/color"
 )
 
-//go:embed data/browsers-qaguru.json
+//go:embed data/browsers.json
 var embeddedBrowsersJSON []byte
 
 func (c *DockerConfigurator) configureEmbeddedBrowsers() (*SelenoidConfig, error) {
-	c.Titlef("Using qa-guru browsers configuration...")
+	c.Titlef("Using embedded browsers configuration...")
 	if len(embeddedBrowsersJSON) == 0 {
 		return nil, errors.New("embedded browsers.json is empty")
 	}

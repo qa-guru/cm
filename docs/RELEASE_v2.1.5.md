@@ -12,7 +12,7 @@
 
 | Изменение | Описание |
 |-----------|----------|
-| **browsers-qaguru.json** | Активный стек: `qaguru/webdriver-chrome:148` (+ `148-min`), Playwright `1.60.0` (+ `-min`); legacy twilio/firefox/edge убраны |
+| **browsers-qaguru.json** | На момент релиза: `qaguru/webdriver-chrome:148` (+ `148-min`), Playwright `1.60.0` (+ `-min`); legacy twilio/firefox/edge убраны. Активный PW сейчас — **1.61.1** (см. [v2.1.6](RELEASE_v2.1.6.md)) |
 | **Тесты** | Go unit: readable display names через `t.Run`; `docker_test` под новый каталог |
 | **Документация** | README и release notes синхронизированы с hub |
 
