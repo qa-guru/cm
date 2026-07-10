@@ -11,7 +11,7 @@
 |---|---|
 | **GitHub** | [qa-guru/cm](https://github.com/qa-guru/cm) |
 | **Docker Hub** | [`qaguru/cm`](https://hub.docker.com/r/qaguru/cm) |
-| **Текущий релиз** | **v2.2.0** — [docs/RELEASE_v2.2.0.md](docs/RELEASE_v2.2.0.md) · `qaguru/cm:v2.2.0` |
+| **Текущий релиз** | **v2.2.1** — [docs/RELEASE_v2.2.1.md](docs/RELEASE_v2.2.1.md) · `qaguru/cm:v2.2.1` |
 
 ## Роль в экосистеме
 
@@ -29,14 +29,16 @@ cm selenoid-ui start
     └── запускает контейнер UI, связанный с hub
 ```
 
-## Связанные репозитории
+## Экосистема qa-guru Selenoid
 
-| GitHub | Что делает cm с ним |
-|--------|---------------------|
-| [selenoid](https://github.com/qa-guru/selenoid) | Скачивает бинарник hub, синхронизирует `browsers.json` |
-| [selenoid-ui](https://github.com/qa-guru/selenoid-ui) | Скачивает бинарник UI |
-| **cm** (этот) | Установщик |
-| [browser-image](https://github.com/qa-guru/browser-image) | `docker pull qaguru/webdriver-*` / `qaguru/playwright-*` по `browsers.json` |
+| Ресурс | Ссылка | Роль |
+|--------|--------|------|
+| selenoid | [github.com/qa-guru/selenoid](https://github.com/qa-guru/selenoid) | Hub |
+| selenoid-ui | [github.com/qa-guru/selenoid-ui](https://github.com/qa-guru/selenoid-ui) | Web UI |
+| **cm** (этот) | [github.com/qa-guru/cm](https://github.com/qa-guru/cm) | Установщик |
+| browser-image | [github.com/qa-guru/browser-image](https://github.com/qa-guru/browser-image) | Docker browser nodes |
+| selenoid-tests | [github.com/qa-guru/selenoid-tests](https://github.com/qa-guru/selenoid-tests) | E2e/integration ethalon |
+| Docker Hub | [hub.docker.com/u/qaguru](https://hub.docker.com/u/qaguru) | Образы `qaguru/*` |
 
 ## browsers.json — SSOT (Docker)
 
@@ -87,8 +89,8 @@ sudo mkdir -p /opt/selenoid
 ./cm selenoid start -f   # принудительно перекачать образы и бинарники
 ```
 
-Текущий релиз cm: **v2.2.0** — [release notes](docs/RELEASE_v2.2.0.md) (binary + embed browsers).  
-Предыдущий: **v2.1.7** — [GitHub Releases](https://github.com/qa-guru/cm/releases/tag/v2.1.7) · [notes](docs/RELEASE_v2.1.7.md). Docker: `qaguru/cm:v2.2.0`.
+Текущий релиз cm: **v2.2.1** — [release notes](docs/RELEASE_v2.2.1.md) (patch: stack semver + ecosystem README).  
+Предыдущий: [docs/RELEASE_v2.2.0.md](docs/RELEASE_v2.2.0.md). Docker: `qaguru/cm:v2.2.1`.
 
 ## Сборка
 
