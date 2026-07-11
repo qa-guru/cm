@@ -1,5 +1,19 @@
 # Configuration Manager (qa-guru fork)
 
+
+[![Configuration Manager](https://qa-guru.github.io/selenoid-tests/readme/badge-cm.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/)
+
+[![CM stats](https://qa-guru.github.io/selenoid-tests/readme/stats-cm.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/)
+
+[![CM metrics](https://qa-guru.github.io/selenoid-tests/readme/metrics-panel-cm.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/)
+
+| Link | Description |
+|------|-------------|
+| [Dashboard](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/) | Full pyramid — filter epic **cm** in awesome |
+| [Awesome](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/) | CM integration test details |
+| [selenoid-tests](https://github.com/qa-guru/selenoid-tests) | Orchestrator + merged Allure |
+
+
 Установщик стека **qa-guru/selenoid** — форк [aerokube/cm](https://github.com/aerokube/cm). Одна команда на чистом сервере с Docker поднимает hub, UI, `browsers.json` и browser-образы.
 
 [![Build Status](https://github.com/qa-guru/cm/workflows/build/badge.svg)](https://github.com/qa-guru/cm/actions?query=workflow%3Abuild)
