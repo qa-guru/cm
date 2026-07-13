@@ -1,5 +1,21 @@
 # Configuration Manager (qa-guru fork)
 
+<!-- stack-branches-note:start -->
+> ## Стабильные билды — две ветки
+>
+> Стабильные версии стека зафиксированы в **двух долгоживущих ветках** (а не в `main`):
+>
+> | Ветка | Стабильный билд | Docker API | Engine | Go |
+> |-------|-----------------|------------|--------|-----|
+> | `selenoid2-1.45-engine26.1-go1.23` | **v2.2.1** — прежний prod ([selenoid.autotests.cloud](https://selenoid.autotests.cloud)) | 1.45 | 26.1.x | 1.26.5 |
+> | `selenoid2-1.55-engine29-go1.26` | **v2.3.0** — актуальный, до нового UI (Selenoid 3) | 1.55 | 29.x | 1.26.5 |
+>
+> **Зачем две ветки:** каждая держит воспроизводимый набор версий. Обновление Docker Engine 26.1.x → 29.x (API 1.45 → 1.55) вынесено в отдельную ветку, чтобы прежний prod-стек собирался в любой момент. `main` — активная разработка, может меняться. Точные версии — в `STACK-PIN.md` в корне ветки.
+>
+> _Вы на ветке `selenoid2-1.55-engine29-go1.26`._
+<!-- stack-branches-note:end -->
+
+
 Установщик стека **qa-guru/selenoid** — форк [aerokube/cm](https://github.com/aerokube/cm). Одна команда на чистом сервере с Docker поднимает hub, UI, `browsers.json` и browser-образы.
 
 [![Build Status](https://github.com/qa-guru/cm/workflows/build/badge.svg)](https://github.com/qa-guru/cm/actions?query=workflow%3Abuild)
@@ -11,7 +27,7 @@
 |---|---|
 | **GitHub** | [qa-guru/cm](https://github.com/qa-guru/cm) |
 | **Docker Hub** | [`qaguru/cm`](https://hub.docker.com/r/qaguru/cm) |
-| **Текущий релиз** | **v2.2.1** — [docs/RELEASE_v2.2.1.md](docs/RELEASE_v2.2.1.md) · `qaguru/cm:v2.2.1` |
+| **Текущий релиз** | **v2.3.0** (in progress) — [docs/RELEASE_v2.3.0.md](docs/RELEASE_v2.3.0.md) · `qaguru/cm:v2.3.0` |
 
 ## Роль в экосистеме
 
@@ -55,7 +71,7 @@ cm selenoid-ui start
 
 ## Установка
 
-**Предварительные условия:** Docker Engine **26.1.x** (API **1.45**, moby/moby client), доступ пользователя к `docker`, опубликованные релизы [qa-guru/selenoid](https://github.com/qa-guru/selenoid/releases) и [qa-guru/selenoid-ui](https://github.com/qa-guru/selenoid-ui/releases). Для сборки cm — Go **1.26.5**.
+**Предварительные условия:** Docker Engine **29.x** (API **1.55**, moby/moby client), доступ пользователя к `docker`, опубликованные релизы [qa-guru/selenoid](https://github.com/qa-guru/selenoid/releases) и [qa-guru/selenoid-ui](https://github.com/qa-guru/selenoid-ui/releases). Для сборки cm — Go **1.26.5**.
 
 Скачать бинарник из GitHub Releases или собрать локально (см. [Сборка](#сборка)):
 
@@ -79,7 +95,7 @@ sudo mkdir -p /opt/selenoid
 ./cm selenoid-ui start -c "$HOME/selenoid"
 ```
 
-`cm selenoid start` передаёт hub `DOCKER_API_VERSION=1.45`.
+`cm selenoid start` передаёт hub `DOCKER_API_VERSION=1.55`.
 
 Обновление:
 
