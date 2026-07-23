@@ -16,7 +16,7 @@
     />
   </picture>
 </a>
-> Dashboard PNG updates after each orchestrator run on `main` (Playwright screenshot of Allure 3 dashboard).
+Dashboard PNG updates after each orchestrator run on `main` (Playwright screenshot of Allure 3 dashboard).
 
 | Link | Description |
 |------|-------------|
@@ -25,18 +25,18 @@
 | [selenoid-tests](https://github.com/qa-guru/selenoid-tests) | Orchestrator + merged Allure |
 
 <!-- stack-branches-note:start -->
-> ## Стабильные билды — две ветки
->
-> Стабильные версии стека зафиксированы в **двух долгоживущих ветках** (а не в `main`). Имя ветки кодирует согласованный toolchain всего стека, включая React из paired `selenoid-ui`:
->
-> | Ветка | Стабильный билд | Docker API | Engine | Go | React | UI |
-> |-------|-----------------|------------|--------|-----|-------|-----|
-> | [`selenoid2-1.45-engine26.1-go1.26-react16`](https://github.com/qa-guru/cm/tree/selenoid2-1.45-engine26.1-go1.26-react16) | **v2.2.1** — прежний prod ([selenoid.autotests.cloud](https://selenoid.autotests.cloud)) | 1.45 | 26.1.x | 1.26.5 | 16 | CRA (react-scripts 3.x) |
-> | [`selenoid2-1.55-engine29.6-go1.26-react18`](https://github.com/qa-guru/cm/tree/selenoid2-1.55-engine29.6-go1.26-react18) | **v2.3.0** — актуальный prod, до нового UI (Selenoid 3) | 1.55 | 29.6+ | 1.26.5 | 18 | Vite 6 |
->
-> **Зачем две ветки:** каждая держит воспроизводимый набор версий (Docker API / Engine / Go / React). Точные версии — в `STACK-PIN.md`.
->
-> _Вы на `main` — активная разработка (следующий рубеж: 3.0.0). Prod-линия зафиксирована тегом **v2.3.0** на [`selenoid2-1.55-engine29.6-go1.26-react18`](https://github.com/qa-guru/cm/tree/selenoid2-1.55-engine29.6-go1.26-react18)._
+## Стабильные билды — две ветки
+
+Стабильные версии стека зафиксированы в **двух долгоживущих ветках** (а не в `main`). Имя ветки кодирует согласованный toolchain всего стека, включая React из paired `selenoid-ui`:
+
+| Ветка | Стабильный билд | Docker API | Engine | Go | React | UI |
+|-------|-----------------|------------|--------|-----|-------|-----|
+| [`selenoid2-1.45-engine26.1-go1.26-react16`](https://github.com/qa-guru/cm/tree/selenoid2-1.45-engine26.1-go1.26-react16) | **v2.2.1** — прежний prod ([selenoid.qa.guru](https://selenoid.qa.guru)) | 1.45 | 26.1.x | 1.26.5 | 16 | CRA (react-scripts 3.x) |
+| [`selenoid2-1.55-engine29.6-go1.26-react18`](https://github.com/qa-guru/cm/tree/selenoid2-1.55-engine29.6-go1.26-react18) | **v2.3.0** — актуальный prod, до нового UI (Selenoid 3) | 1.55 | 29.6+ | 1.26.5 | 18 | Vite 6 |
+
+**Зачем две ветки:** каждая держит воспроизводимый набор версий (Docker API / Engine / Go / React). Точные версии — в `STACK-PIN.md`.
+
+_Вы на `main` — активная разработка (следующий рубеж: 3.0.0). Prod-линия зафиксирована тегом **v2.3.0** на [`selenoid2-1.55-engine29.6-go1.26-react18`](https://github.com/qa-guru/cm/tree/selenoid2-1.55-engine29.6-go1.26-react18)._
 <!-- stack-branches-note:end -->
 
 
@@ -87,7 +87,7 @@ cm selenoid-ui start
 | `dev/browsers.json` (selenoid-home) | **SSOT** полный Docker-каталог (`qaguru/*` images) |
 | `selenoid/data/browsers.json` (этот репо, go:embed) | Копия SSOT для `cm selenoid configure` / `start` без `-j` |
 | [`selenoid/config/browsers.json`](https://github.com/qa-guru/selenoid/blob/main/config/browsers.json) | Копия SSOT на hub |
-| [`selenoid.autotests.cloud/deploy/browsers-production.json`](https://github.com/qa-guru/selenoid.autotests.cloud/blob/main/deploy/browsers-production.json) | Prod overlay (только по явному prod-запросу) |
+| [`selenoid.qa.guru/deploy/browsers-production.json`](https://github.com/qa-guru/selenoid.qa.guru/blob/main/deploy/browsers-production.json) | Prod overlay (только по явному prod-запросу) |
 
 Правки Docker-каталога — в `dev/browsers.json`, затем `dev/scripts/sync-cm-browsers.sh`.
 

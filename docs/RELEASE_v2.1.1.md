@@ -31,4 +31,4 @@ chmod +x cm
 ./cm selenoid-ui update -c /opt/selenoid
 ```
 
-Prod: [deploy workflow](https://github.com/qa-guru/selenoid.autotests.cloud/actions/workflows/deploy.yml) с `version=v2.1.1`.
+Prod: [deploy workflow](https://github.com/qa-guru/selenoid.qa.guru/actions/workflows/deploy.yml) с `version=v2.1.1`.

@@ -4,7 +4,7 @@
 **Предыдущий:** [v2.0.9](https://github.com/qa-guru/cm/releases/tag/v2.0.9)  
 **GitHub:** https://github.com/qa-guru/cm/releases/tag/v2.1.0
 
-Инфраструктурный релиз: **единая версия стека v2.1.0**, prod-деплой вынесен в [qa-guru/selenoid.autotests.cloud](https://github.com/qa-guru/selenoid.autotests.cloud). Код cm без изменений относительно v2.0.9.
+Инфраструктурный релиз: **единая версия стека v2.1.0**, prod-деплой вынесен в [qa-guru/selenoid.qa.guru](https://github.com/qa-guru/selenoid.qa.guru). Код cm без изменений относительно v2.0.9.
 
 ---
 
@@ -12,7 +12,7 @@
 
 | Изменение | Описание |
 |-----------|----------|
-| **Prod deploy** | Скрипты, nginx, CI — в [selenoid.autotests.cloud](https://github.com/qa-guru/selenoid.autotests.cloud) |
+| **Prod deploy** | Скрипты, nginx, CI — в [selenoid.qa.guru](https://github.com/qa-guru/selenoid.qa.guru) |
 | **cm** | Только сборка, релиз и Docker-образ установщика |
 | **Стек v2.1.0** | cm, hub, UI, deploy — одна версия **v2.1.0** |
 
@@ -25,4 +25,4 @@ curl -sL https://github.com/qa-guru/cm/releases/download/v2.1.0/cm_linux_amd64 -
 chmod +x cm
 ```
 
-Prod: [deploy workflow](https://github.com/qa-guru/selenoid.autotests.cloud/actions/workflows/deploy.yml) с `version=v2.1.0`, `ref=v2.1.0`.
+Prod: [deploy workflow](https://github.com/qa-guru/selenoid.qa.guru/actions/workflows/deploy.yml) с `version=v2.1.0`, `ref=v2.1.0`.
