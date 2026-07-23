@@ -18,7 +18,7 @@ require (
 	github.com/moby/moby/client v0.5.0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/text v0.25.0
+	golang.org/x/text v0.39.0
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 )
 
