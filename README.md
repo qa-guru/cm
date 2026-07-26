@@ -48,7 +48,7 @@ Dashboard PNG updates after each orchestrator run on `main` (Playwright screensh
 |---|---|
 | **GitHub** | [qa-guru/cm](https://github.com/qa-guru/cm) |
 | **Docker Hub** | [`qaguru/cm`](https://hub.docker.com/r/qaguru/cm) |
-| **Текущий релиз** | **v3.0.0** — [docs/RELEASE_v3.0.0.md](docs/RELEASE_v3.0.0.md) · `qaguru/cm:v3.0.0` |
+| **Текущий релиз** | **v3.0.1** — [docs/RELEASE_v3.0.1.md](docs/RELEASE_v3.0.1.md) · `qaguru/cm:v3.0.1` |
 
 ## Роль в экосистеме
 
@@ -126,7 +126,7 @@ sudo mkdir -p /opt/selenoid
 ./cm selenoid start -f   # принудительно перекачать образы и бинарники
 ```
 
-Текущий релиз cm: **v3.0.0** — [release notes](docs/RELEASE_v3.0.0.md).  
+Текущий релиз cm: **v3.0.1** — [release notes](docs/RELEASE_v3.0.1.md).  
 Предыдущий: [docs/RELEASE_v2.2.0.md](docs/RELEASE_v2.2.0.md). Docker: `qaguru/cm:v2.2.1`.
 
 ## Сборка
