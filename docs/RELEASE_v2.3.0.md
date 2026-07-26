@@ -40,4 +40,4 @@ Prod deploy: `CM_VERSION=v2.3.0`, hub `v2.3.0`, UI `v2.3.0`.
 
 1. Commit docs на pin-ветке → `git tag -a v2.3.0 -m "v2.3.0"` → push tags *(по команде)*.
 2. GitHub Release (published) → `release.yml`: assets `dist/cm_*`; Docker `qaguru/cm:v2.3.0` + `latest-release`.
-3. OUT: `warm-pool-orchestrator/`.
+3. OUT: `selenoid-warm-pool/`.

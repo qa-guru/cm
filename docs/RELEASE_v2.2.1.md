@@ -38,4 +38,4 @@ Prod deploy: `CM_VERSION=v2.2.1`, hub `v2.2.1`, UI `v2.2.1`.
 
 1. Commit docs на `main` → `git tag -a v2.2.1 -m "v2.2.1"` → push tags *(по команде)*.
 2. Release assets `dist/cm_*`; Docker `qaguru/cm:v2.2.1`.
-3. OUT: `warm-pool-orchestrator/`.
+3. OUT: `selenoid-warm-pool/`.
