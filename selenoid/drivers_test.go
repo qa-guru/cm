@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aerokube/selenoid/config"
+	"github.com/qa-guru/selenoid/config"
 	"github.com/google/go-github/github"
 	assert "github.com/stretchr/testify/require"
 )

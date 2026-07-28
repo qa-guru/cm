@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/aerokube/selenoid/config"
+	"github.com/qa-guru/selenoid/config"
 	"github.com/fatih/color"
 	"github.com/mitchellh/go-ps"
 	"golang.org/x/text/cases"

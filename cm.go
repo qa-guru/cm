@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/aerokube/cm/cmd"
+	"github.com/qa-guru/cm/cmd"
 )
 
 func main() {

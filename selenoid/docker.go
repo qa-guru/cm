@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/aerokube/selenoid/config"
+	"github.com/qa-guru/selenoid/config"
 	ctr "github.com/moby/moby/api/types/container"
 	img "github.com/moby/moby/api/types/image"
 	"github.com/moby/moby/api/types/network"
@@ -30,7 +30,7 @@ import (
 	"github.com/heroku/docker-registry-client/registry"
 	"github.com/mattn/go-colorable"
 
-	"github.com/aerokube/cm/render/rewriter"
+	"github.com/qa-guru/cm/render/rewriter"
 	"github.com/fatih/color"
 	. "github.com/fvbommel/sortorder"
 )

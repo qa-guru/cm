@@ -1,7 +1,7 @@
 # Release v2.0.0 — qa-guru/cm
 
 **Дата:** 25 июня 2026  
-**База:** форк [aerokube/cm](https://github.com/aerokube/cm) v1.8.8  
+**База:** форк [aerokube/cm](https://github.com/qa-guru/cm) v1.8.8  
 **GitHub:** https://github.com/qa-guru/cm/releases/tag/v2.0.0
 
 Configuration Manager для установки стека **qa-guru/selenoid** v2.0.0 с Playwright одной командой.

@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/aerokube/selenoid/config"
+	"github.com/qa-guru/selenoid/config"
 	img "github.com/moby/moby/api/types/image"
 	assert "github.com/stretchr/testify/require"
 )

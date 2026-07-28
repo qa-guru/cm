@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/aerokube/cm/selenoid"
+	"github.com/qa-guru/cm/selenoid"
 	"github.com/spf13/cobra"
 )
 

@@ -37,7 +37,7 @@ Dashboard PNG updates after each orchestrator run on `main` (Playwright screensh
 <!-- stack-branches-note:end -->
 
 
-Установщик стека **qa-guru/selenoid** — форк [aerokube/cm](https://github.com/aerokube/cm). Одна команда на чистом сервере с Docker поднимает hub, UI, `browsers.json` и browser-образы.
+Установщик стека **qa-guru/selenoid** — форк [aerokube/cm](https://github.com/qa-guru/cm). Одна команда на чистом сервере с Docker поднимает hub, UI, `browsers.json` и browser-образы.
 
 [![Build Status](https://github.com/qa-guru/cm/workflows/build/badge.svg)](https://github.com/qa-guru/cm/actions?query=workflow%3Abuild)
 [![Go Report Card](https://goreportcard.com/badge/github.com/qa-guru/cm)](https://goreportcard.com/report/github.com/qa-guru/cm)

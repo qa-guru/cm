@@ -1,4 +1,4 @@
-module github.com/aerokube/cm
+module github.com/qa-guru/cm
 
 go 1.26
 
@@ -6,7 +6,6 @@ toolchain go1.26.5
 
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
-	github.com/aerokube/selenoid v0.0.0-20240520175821-773c202b01e3
 	github.com/docker/go-connections v0.7.0
 	github.com/fatih/color v1.17.0
 	github.com/fvbommel/sortorder v1.1.0
@@ -16,6 +15,7 @@ require (
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/moby/moby/api v1.55.0
 	github.com/moby/moby/client v0.5.0
+	github.com/qa-guru/selenoid v0.0.0-20260728215803-3f8967ce0d9d
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/text v0.39.0
@@ -54,5 +54,3 @@ require (
 	golang.org/x/sys v0.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/aerokube/selenoid => github.com/qa-guru/selenoid v0.0.0-20260707221418-7fe0173cf3fd
