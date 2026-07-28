@@ -15,7 +15,7 @@ require (
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/moby/moby/api v1.55.0
 	github.com/moby/moby/client v0.5.0
-	github.com/qa-guru/selenoid v0.0.0-20260728215803-3f8967ce0d9d
+	github.com/qa-guru/selenoid v0.0.0-20260728215853-99cf44e541c8
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/text v0.39.0
