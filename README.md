@@ -27,13 +27,17 @@ Dashboard PNG updates after each orchestrator run on `main` (Playwright screensh
 <!-- stack-branches-note:start -->
 > ## Стабильные билды
 >
-> **Prod cm/hub:** релизы с **`main`** → **v3.0.0+**. Pin-ветки 2.x — **заморожены** (rollback reference only).
+> **Prod cm/hub:** релизы с **`main`** → **v3.0.0+** ([selenoid.qa.guru](https://selenoid.qa.guru)). UI — отдельная v3.x линия на `selenoid-ui` `main`.
+>
+> Pin-ветки **2.x** (`selenoid2-…-react16` / `react18`) — **заморожены** (rollback reference only).
 >
 > | Ветка | Semver | Назначение |
 > |-------|--------|------------|
 > | **`main`** | **v3.0.0+** | Активная prod-линия cm |
 > | `selenoid2-1.55-…-react18` | v2.3.0 | frozen |
 > | `selenoid2-1.45-…-react16` | v2.2.1 | frozen |
+>
+> Monorepo SSOT: [`projects/selenoid-home/README.md`](https://github.com/qa-guru/zero-design-system/blob/master/projects/selenoid-home/README.md).
 <!-- stack-branches-note:end -->
 
 

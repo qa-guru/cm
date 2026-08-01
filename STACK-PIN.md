@@ -1,21 +1,27 @@
-# Stack pin: selenoid2-1.55-engine29.6-go1.26-react18
+# Stack pin: main / v3.0.x (Selenoid 3)
 
 **Репозиторий:** Configuration manager (qa-guru/cm)
 
+Этот файл на **`main`** описывает живой cm toolchain. Pin-ветки 2.x — отдельные frozen `STACK-PIN.md`.
+
 | Поле | Значение |
 |------|----------|
-| Линия | Selenoid 2 (maintenance) |
-| Stack semver | v2.3.0 |
-| Docker API | 1.55 |
-| Docker Engine | 29.x (рекоменд. 29.6+) |
-| Go | 1.26.5 |
-| Go (примечание) | Факт на cut v2.3.0 (`go.mod` + `toolchain go1.26.5`) |
-| React | 18 |
-| UI | Vite 6 |
-| Prod reference | [selenoid.qa.guru](https://selenoid.qa.guru) — пример стенда v2.3.0 |
-| До | До фазы 3 / Selenoid 3 UI (selenoid.qa.guru) |
-| Git anchor | тег `v2.3.0` / `main` |
-| API pin | `selenoid/docker.go` → `1.55` |
-| React (stack pin) | 18 — paired [selenoid-ui](https://github.com/qa-guru/selenoid-ui) |
+| Линия | Selenoid 3 |
+| Stack semver | cm cut **v3.0.2** (latest tag; prod pin — deploy-чат) |
+| Docker API | TBD (paired с hub) |
+| Docker Engine | TBD (prod: Debian 12 · Docker 29.6) |
+| Go | 1.26.5+ |
+| Go (примечание) | Факт `go.mod` + `toolchain go1.26.5` |
+| Prod | [selenoid.qa.guru](https://selenoid.qa.guru) |
+| Git anchor | `main` |
+| Docker image | `qaguru/cm:v3.0.x` |
+| browsers.json | embed `selenoid/data/browsers.json` = копия SSOT из `dev/browsers.json` |
+
+## Selenoid 2 maintenance pin (не путать)
+
+Maintenance **v2.3.0** — только pin-ветка
+[`selenoid2-1.55-engine29.6-go1.26-react18`](https://github.com/qa-guru/cm/tree/selenoid2-1.55-engine29.6-go1.26-react18).
+Rollback **v2.2.1** —
+[`selenoid2-1.45-engine26.1-go1.26-react16`](https://github.com/qa-guru/cm/tree/selenoid2-1.45-engine26.1-go1.26-react16).
 
 См. также: [`projects/selenoid-home/README.md`](https://github.com/qa-guru/zero-design-system/blob/master/projects/selenoid-home/README.md) (monorepo SSOT).
