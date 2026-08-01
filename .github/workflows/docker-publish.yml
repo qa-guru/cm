@@ -1,3 +1,4 @@
+# DEPRECATED (GHA-006): tagged images via release.yml. Manual emergency republish only.
 name: docker-publish
 
 on:
@@ -17,7 +18,7 @@ jobs:
     env:
       GOTOOLCHAIN: go1.26.5+auto
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Setup Golang
         uses: actions/setup-go@v6
