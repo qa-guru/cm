@@ -23,6 +23,13 @@ func TestEmbeddedBrowsersJSON(t *testing.T) {
 	}
 	assert.Equal(t, "149.0", cfg["chrome"].Default)
 	assert.Equal(t, "1.61.1", cfg["playwright-chromium"].Default)
+
+	android, ok := cfg["android"]
+	assert.True(t, ok, "embedded catalog missing android")
+	assert.Equal(t, "16.0", android.Default)
+	assert.Contains(t, android.Versions, "5.1")
+	assert.NotContains(t, android.Versions, "4.4")
+	assert.Equal(t, "qaguru/android:16", android.Versions["16.0"].Image)
 }
 
 func TestConfigureEmbeddedBrowsersWritesConfig(t *testing.T) {
