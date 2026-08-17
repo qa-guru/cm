@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/moby/moby/client"
 	"github.com/fatih/color"
+	"github.com/moby/moby/client"
 )
 
 type LifecycleConfig struct {
@@ -34,6 +34,10 @@ type LifecycleConfig struct {
 
 	SelenoidBinary   string
 	SelenoidUIBinary string
+
+	// Warm/hot sidecar (qa-guru/selenoid-warm-pool). --hot-pool implies warm.
+	WarmPool bool
+	HotPool  bool
 
 	// Drivers specific
 	UseDrivers     bool
@@ -175,6 +179,9 @@ func (l *Lifecycle) Start() error {
 					}
 				} else {
 					l.Titlef("Selenoid is already running")
+					if l.Config != nil && (l.Config.WarmPool || l.Config.HotPool) {
+						l.Pointf("pass -f to restart hub with --warm-pool / --hot-pool")
+					}
 					return nil
 				}
 			}

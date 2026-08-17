@@ -40,3 +40,33 @@ func TestRootWithoutArgsShowsUsage(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Contains(t, buf.String(), "Usage:")
 }
+
+func TestSelenoidStartWarmPoolFlags(t *testing.T) {
+	t.Cleanup(func() {
+		warmPool = false
+		hotPool = false
+		_ = selenoidStartCmd.Flags().Set("warm-pool", "false")
+		_ = selenoidStartCmd.Flags().Set("hot-pool", "false")
+	})
+
+	assert.NotNil(t, selenoidStartCmd.Flags().Lookup("warm-pool"))
+	assert.NotNil(t, selenoidStartCmd.Flags().Lookup("hot-pool"))
+	assert.NotNil(t, selenoidUpdateCmd.Flags().Lookup("warm-pool"))
+	assert.NotNil(t, selenoidStopCmd.Flags().Lookup("hot-pool"))
+
+	warmPool, hotPool = false, false
+	assert.NoError(t, selenoidStartCmd.ParseFlags([]string{"--warm-pool"}))
+	assert.True(t, warmPool)
+	assert.False(t, hotPool)
+
+	warmPool, hotPool = false, false
+	assert.NoError(t, selenoidStartCmd.ParseFlags([]string{"--hot-pool"}))
+	assert.True(t, hotPool)
+}
+
+func TestSelenoidStartHelpMentionsWarmPool(t *testing.T) {
+	usages := selenoidStartCmd.Flags().FlagUsages()
+	assert.Contains(t, usages, "--warm-pool")
+	assert.Contains(t, usages, "--hot-pool")
+	assert.Contains(t, usages, "-warm-pool-url")
+}

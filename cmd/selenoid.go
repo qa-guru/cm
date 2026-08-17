@@ -11,28 +11,30 @@ import (
 )
 
 var (
-	operatingSystem string
-	arch            string
-	version         string
-	browsers        string
-	useDrivers      bool
-	browsersJson    string
-	driversInfoUrl  string
-	configDir       string
-	uiConfigDir     string
-	skipDownload    bool
-	force           bool
-	graceful        bool
-	gracefulTimeout time.Duration
-	args            string
-	env             string
-	browserEnv      string
-	port            uint16
-	uiPort          uint16
-	userNS          string
-	disableLogs     bool
-	selenoidBinary  string
+	operatingSystem  string
+	arch             string
+	version          string
+	browsers         string
+	useDrivers       bool
+	browsersJson     string
+	driversInfoUrl   string
+	configDir        string
+	uiConfigDir      string
+	skipDownload     bool
+	force            bool
+	graceful         bool
+	gracefulTimeout  time.Duration
+	args             string
+	env              string
+	browserEnv       string
+	port             uint16
+	uiPort           uint16
+	userNS           string
+	disableLogs      bool
+	selenoidBinary   string
 	selenoidUIBinary string
+	warmPool         bool
+	hotPool          bool
 )
 
 func init() {
@@ -179,6 +181,15 @@ func initFlags() {
 		c.Flags().StringVarP(&userNS, "userns", "", "", "override user namespace, similarly to \"docker run --userns host ...\" (Docker only)")
 		c.Flags().BoolVarP(&disableLogs, "disable-logs", "", false, "start with log saving feature disabled")
 	}
+	for _, c := range []*cobra.Command{
+		selenoidStartCmd,
+		selenoidUpdateCmd,
+		selenoidStopCmd,
+		selenoidCleanupCmd,
+	} {
+		c.Flags().BoolVar(&warmPool, "warm-pool", false, "start warm 4/4 sidecar and pass hub -warm-pool-url http://127.0.0.1:9090")
+		c.Flags().BoolVar(&hotPool, "hot-pool", false, "start hot 2/2 slots (compose profile hot, same orchestrator; implies --warm-pool)")
+	}
 }
 
 func createLifecycle(configDir string, port uint16) (*selenoid.Lifecycle, error) {
@@ -203,6 +214,9 @@ func createLifecycle(configDir string, port uint16) (*selenoid.Lifecycle, error)
 
 		SelenoidBinary:   selenoidBinary,
 		SelenoidUIBinary: selenoidUIBinary,
+
+		WarmPool: warmPool,
+		HotPool:  hotPool,
 
 		DriversInfoUrl: driversInfoUrl,
 		OS:             operatingSystem,

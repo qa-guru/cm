@@ -21,9 +21,9 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/qa-guru/selenoid/config"
 	"github.com/fatih/color"
 	"github.com/mitchellh/go-ps"
+	"github.com/qa-guru/selenoid/config"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"gopkg.in/cheggaaa/pb.v1"
@@ -70,6 +70,7 @@ type DriversConfigurator struct {
 	RequestedBrowsersAware
 	LogsAware
 	GracefulAware
+	PoolAware
 	DriversInfoUrl string
 
 	GithubBaseUrl string
@@ -90,6 +91,7 @@ func NewDriversConfigurator(config *LifecycleConfig) *DriversConfigurator {
 		RequestedBrowsersAware: RequestedBrowsersAware{Browsers: config.Browsers},
 		LogsAware:              LogsAware{DisableLogs: config.DisableLogs},
 		GracefulAware:          GracefulAware{Graceful: config.Graceful, GracefulTimeout: config.GracefulTimeout},
+		PoolAware:              PoolAware{WarmPool: config.WarmPool, HotPool: config.HotPool},
 		DriversInfoUrl:         config.DriversInfoUrl,
 		GithubBaseUrl:          config.GithubBaseUrl,
 		OS:                     config.OS,
@@ -484,7 +486,7 @@ func outputFile(outputPath string, mode os.FileMode, r io.Reader) error {
 }
 
 const (
-	driversBrowserListSeparator = ";"
+	driversBrowserListSeparator    = ";"
 	driversBrowserVersionSeparator = ":"
 )
 
@@ -580,6 +582,11 @@ func (d *DriversConfigurator) PrintArgs() error {
 }
 
 func (d *DriversConfigurator) Start() error {
+	if d.poolEnabled() {
+		if err := startWarmPoolSidecar(d.Logger, d.ConfigDir, d.HotPool, d.Quiet); err != nil {
+			return err
+		}
+	}
 	args := []string{}
 	overrideArgs := strings.Fields(d.Args)
 	if len(overrideArgs) > 0 {
@@ -597,6 +604,9 @@ func (d *DriversConfigurator) Start() error {
 	if !d.DisableLogs && !contains(args, "-log-output-dir") && isLogSavingSupported(d.Logger, d.Version) {
 		logsConfigDir := getVolumeConfigDir(filepath.Join(d.ConfigDir, logsDirName), append(selenoidConfigDirElem, logsDirName))
 		args = append(args, "-log-output-dir", logsConfigDir)
+	}
+	if d.poolEnabled() {
+		args = appendWarmPoolHubArgs(args)
 	}
 
 	env := strings.Fields(d.Env)
@@ -650,7 +660,13 @@ var killFunc = func(p *os.Process, graceful bool, gracefulTimeout time.Duration)
 }
 
 func (d *DriversConfigurator) Stop() error {
-	return d.killAllProcesses(findSelenoidProcesses())
+	if err := d.killAllProcesses(findSelenoidProcesses()); err != nil {
+		return err
+	}
+	if d.poolEnabled() || warmPoolManaged(d.ConfigDir) {
+		return stopWarmPoolSidecar(d.Logger, d.ConfigDir)
+	}
+	return nil
 }
 
 func (d *DriversConfigurator) StopUI() error {

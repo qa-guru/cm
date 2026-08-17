@@ -65,6 +65,14 @@ cm selenoid start
     ├── docker pull qaguru/webdriver-chrome + qaguru/playwright-*
     └── запускает контейнер hub
 
+cm selenoid start --warm-pool
+    ├── то же, что start
+    ├── docker compose: warm 4/4 + orchestrator :9090
+    └── hub: -warm-pool-url http://127.0.0.1:9090  (host network)
+
+cm selenoid start --hot-pool
+    └── то же + compose profile `hot` (2/2 min slots, тот же оркестратор)
+
 cm selenoid-ui start
     ├── скачивает qaguru/selenoid-ui из GitHub Releases
     └── запускает контейнер UI, связанный с hub
@@ -113,6 +121,16 @@ sudo mkdir -p /opt/selenoid
 ./cm selenoid-ui start
 ```
 
+Warm 4/4 sidecar (orchestrator `:9090`, hub `-warm-pool-url http://127.0.0.1:9090`):
+
+```bash
+./cm selenoid start --warm-pool
+# hot 2/2, same orchestrator (not a third binary):
+./cm selenoid start --hot-pool
+```
+
+Без флага — как раньше: только cold hub. `cm selenoid stop` гасит sidecar, если его поднял этот cm (маркер в `-c …/warm-pool`).
+
 Локально без прав на `/opt` — свой каталог:
 
 ```bash
@@ -150,6 +168,8 @@ go build -o cm .
 | `-c, --config-dir` | Каталог данных (default: **`/opt/selenoid`**) |
 | `-f, --force` | Перекачать образы и бинарники |
 | `-n, --no-download` | Только записать `browsers.json`, без `docker pull` |
+| `--warm-pool` | Sidecar [selenoid-warm-pool](https://github.com/qa-guru/selenoid-warm-pool): warm 4/4 + orchestrator; hub `-warm-pool-url http://127.0.0.1:9090` |
+| `--hot-pool` | Compose profile `hot` (2/2 `-min`); тот же оркестратор, implies `--warm-pool` |
 
 Флаги `--browsers`, `--browser-env`, `--drivers-info` — только для режима `--use-drivers`; `--drivers-info` обязателен (собственный каталог chromedriver/geckodriver).
 
@@ -169,4 +189,7 @@ go build -o cm .
   bin/selenoid-ui
   video/
   logs/
+  warm-pool/          # только при --warm-pool / --hot-pool
+    docker-compose.yml
+    config.yaml
 ```

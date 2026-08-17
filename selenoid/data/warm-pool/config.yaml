@@ -1,0 +1,53 @@
+# Warm 4/4 + hot 2/2. Hub: -warm-pool-url http://127.0.0.1:9090
+# Hot containers only start with `cm selenoid start --hot-pool` (compose profile hot).
+
+slots:
+  - id: pool-chrome-1
+    protocol: webdriver
+    browser: chrome
+    session_id: pool-chrome-1
+    warm_url: http://warm-chrome-1:4444
+    webdriver_url: http://warm-chrome-1:4444/
+    webdriver_url_loopback: http://127.0.0.1:14441/
+
+  - id: pool-chrome-2
+    protocol: webdriver
+    browser: chrome
+    session_id: pool-chrome-2
+    warm_url: http://warm-chrome-2:4444
+    webdriver_url: http://warm-chrome-2:4444/
+    webdriver_url_loopback: http://127.0.0.1:14442/
+
+  - id: pool-pw-chromium-1
+    protocol: playwright
+    browser: chromium
+    session_id: pool-pw-chromium-1
+    warm_url: http://warm-pw-1:3000
+    playwright_ws_url: ws://warm-pw-1:3000/
+    playwright_ws_url_loopback: ws://127.0.0.1:14501/
+
+  - id: pool-pw-chromium-min-1
+    protocol: playwright
+    browser: chromium
+    session_id: pool-pw-chromium-min-1
+    warm_url: http://warm-pw-min-1:3000
+    playwright_ws_url: ws://warm-pw-min-1:3000/
+    playwright_ws_url_loopback: ws://127.0.0.1:14502/
+
+  - id: pool-hot-chrome-min-1
+    protocol: webdriver
+    browser: chrome
+    pool: hot
+    session_id: pool-hot-chrome-min-1
+    warm_url: http://hot-chrome-min-1:4444
+    webdriver_url: http://hot-chrome-min-1:4444/
+    webdriver_url_loopback: http://127.0.0.1:16440/
+
+  - id: pool-hot-pw-min-1
+    protocol: playwright
+    browser: chromium
+    pool: hot
+    session_id: pool-hot-pw-min-1
+    warm_url: http://hot-pw-min-1:3000
+    playwright_ws_url: ws://hot-pw-min-1:3000/
+    playwright_ws_url_loopback: ws://127.0.0.1:16441/

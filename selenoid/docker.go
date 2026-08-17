@@ -21,22 +21,22 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/qa-guru/selenoid/config"
+	"github.com/docker/go-connections/nat"
+	"github.com/heroku/docker-registry-client/registry"
+	"github.com/mattn/go-colorable"
 	ctr "github.com/moby/moby/api/types/container"
 	img "github.com/moby/moby/api/types/image"
 	"github.com/moby/moby/api/types/network"
 	"github.com/moby/moby/client"
-	"github.com/docker/go-connections/nat"
-	"github.com/heroku/docker-registry-client/registry"
-	"github.com/mattn/go-colorable"
+	"github.com/qa-guru/selenoid/config"
 
-	"github.com/qa-guru/cm/render/rewriter"
 	"github.com/fatih/color"
 	. "github.com/fvbommel/sortorder"
+	"github.com/qa-guru/cm/render/rewriter"
 )
 
 const (
-	Latest                = "latest"
+	Latest                  = "latest"
 	selenoidImage           = selenoidWrapperImage
 	selenoidUIImage         = selenoidUIWrapperImage
 	videoRecorderImage      = "qaguru/video-recorder:latest"
@@ -69,32 +69,34 @@ type DockerConfigurator struct {
 	SelenoidUIBinaryPath string
 	RegistryUrl          string
 	BrowsersJson         string
-	docker               *client.Client
-	reg                  *registry.Registry
-	authConfig           *dockerAuthConfig
-	registryHost         string
+	PoolAware
+	docker       *client.Client
+	reg          *registry.Registry
+	authConfig   *dockerAuthConfig
+	registryHost string
 }
 
 func NewDockerConfigurator(config *LifecycleConfig) (*DockerConfigurator, error) {
 	c := &DockerConfigurator{
-		Logger:           Logger{Quiet: config.Quiet},
-		ConfigDirAware:   ConfigDirAware{ConfigDir: config.ConfigDir},
-		VersionAware:     VersionAware{Version: config.Version},
-		DownloadAware:    DownloadAware{DownloadNeeded: config.Download},
-		ArgsAware:        ArgsAware{Args: config.Args},
-		EnvAware:         EnvAware{Env: config.Env},
-		PortAware:        PortAware{Port: config.Port},
-		UserNSAware:      UserNSAware{UserNS: config.UserNS},
-		LogsAware:        LogsAware{DisableLogs: config.DisableLogs},
-		GracefulAware:    GracefulAware{Graceful: config.Graceful, GracefulTimeout: config.GracefulTimeout},
-		Forceable:        Forceable{Force: config.Force},
-		GithubBaseUrl:    config.GithubBaseUrl,
-		OS:               config.OS,
-		Arch:             config.Arch,
+		Logger:               Logger{Quiet: config.Quiet},
+		ConfigDirAware:       ConfigDirAware{ConfigDir: config.ConfigDir},
+		VersionAware:         VersionAware{Version: config.Version},
+		DownloadAware:        DownloadAware{DownloadNeeded: config.Download},
+		ArgsAware:            ArgsAware{Args: config.Args},
+		EnvAware:             EnvAware{Env: config.Env},
+		PortAware:            PortAware{Port: config.Port},
+		UserNSAware:          UserNSAware{UserNS: config.UserNS},
+		LogsAware:            LogsAware{DisableLogs: config.DisableLogs},
+		GracefulAware:        GracefulAware{Graceful: config.Graceful, GracefulTimeout: config.GracefulTimeout},
+		Forceable:            Forceable{Force: config.Force},
+		GithubBaseUrl:        config.GithubBaseUrl,
+		OS:                   config.OS,
+		Arch:                 config.Arch,
 		SelenoidBinaryPath:   config.SelenoidBinary,
 		SelenoidUIBinaryPath: config.SelenoidUIBinary,
-		RegistryUrl:      config.RegistryUrl,
-		BrowsersJson:     config.BrowsersJson,
+		RegistryUrl:          config.RegistryUrl,
+		BrowsersJson:         config.BrowsersJson,
+		PoolAware:            PoolAware{WarmPool: config.WarmPool, HotPool: config.HotPool},
 	}
 	if c.Quiet {
 		log.SetFlags(0)
@@ -558,6 +560,12 @@ const (
 )
 
 func (c *DockerConfigurator) Start() error {
+	if c.poolEnabled() {
+		if err := startWarmPoolSidecar(c.Logger, c.ConfigDir, c.HotPool, c.Quiet); err != nil {
+			return err
+		}
+	}
+
 	img := c.getSelenoidImage()
 	if img == nil {
 		return errors.New("selenoid image is not downloaded: this is probably a bug")
@@ -604,6 +612,12 @@ func (c *DockerConfigurator) Start() error {
 	if !contains(cmd, "-container-network") {
 		cmd = append(cmd, "-container-network", networkName)
 	}
+	if c.poolEnabled() && c.hubUsesHostNetwork() && !contains(cmd, "-listen") {
+		cmd = append(cmd, fmt.Sprintf("-listen=:%d", c.Port))
+	}
+	if c.poolEnabled() {
+		cmd = appendWarmPoolHubArgs(cmd)
+	}
 	// qaguru/selenoid image sets ENTRYPOINT to /usr/bin/selenoid; prepending the
 	// binary again makes Go flag.Parse stop at the duplicate argv and ignore flags.
 
@@ -621,8 +635,13 @@ func (c *DockerConfigurator) Start() error {
 		Cmd:         cmd,
 		OverrideEnv: overrideEnv,
 		UserNS:      c.UserNS,
+		HostNetwork: c.hubUsesHostNetwork(),
 	}
 	return c.startContainer(cfg)
+}
+
+func (c *DockerConfigurator) hubUsesHostNetwork() bool {
+	return c.poolEnabled()
 }
 
 func isVideoRecordingSupported(logger Logger, version string) bool {
@@ -794,6 +813,7 @@ type containerConfig struct {
 	OverrideEnv []string
 	UserNS      string
 	PrintLogs   bool
+	HostNetwork bool
 }
 
 func (c *DockerConfigurator) startContainer(cfg *containerConfig) error {
@@ -831,9 +851,13 @@ func (c *DockerConfigurator) startContainer(cfg *containerConfig) error {
 	if len(cfg.Cmd) > 0 {
 		containerConfig.Cmd = cfg.Cmd
 	}
+	networkMode := ctr.NetworkMode(networkName)
+	if cfg.HostNetwork {
+		networkMode = "host"
+	}
 	hostConfig := ctr.HostConfig{
 		Binds:       cfg.Volumes,
-		NetworkMode: ctr.NetworkMode(networkName),
+		NetworkMode: networkMode,
 	}
 	if cfg.UserNS != "" {
 		mode := ctr.UsernsMode(cfg.UserNS)
@@ -849,7 +873,7 @@ func (c *DockerConfigurator) startContainer(cfg *containerConfig) error {
 			Name: "always",
 		}
 	}
-	if cfg.HostPort > 0 && cfg.ServicePort > 0 {
+	if !cfg.HostNetwork && cfg.HostPort > 0 && cfg.ServicePort > 0 {
 		hostPortString := strconv.Itoa(cfg.HostPort)
 		portBindings, portErr := networkPortMap(nat.PortMap{
 			port: {{HostIP: "0.0.0.0", HostPort: hostPortString}},
@@ -921,6 +945,11 @@ func (c *DockerConfigurator) Stop() error {
 		err := c.removeContainer(sc.ID)
 		if err != nil {
 			return fmt.Errorf("failed to stop Selenoid container: %v", err)
+		}
+	}
+	if c.poolEnabled() || warmPoolManaged(c.ConfigDir) {
+		if err := stopWarmPoolSidecar(c.Logger, c.ConfigDir); err != nil {
+			return fmt.Errorf("failed to stop warm-pool sidecar: %v", err)
 		}
 	}
 	return nil
