@@ -2,7 +2,7 @@ module github.com/qa-guru/cm
 
 go 1.26
 
-toolchain go1.26.5
+toolchain go1.26.6
 
 require (
 	github.com/Masterminds/semver/v3 v3.2.1

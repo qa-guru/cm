@@ -52,7 +52,7 @@ Dashboard PNG updates after each orchestrator run on `main` (Playwright screensh
 |---|---|
 | **GitHub** | [qa-guru/cm](https://github.com/qa-guru/cm) |
 | **Docker Hub** | [`qaguru/cm`](https://hub.docker.com/r/qaguru/cm) |
-| **Текущий релиз** | **v3.0.1** — [docs/RELEASE_v3.0.1.md](docs/RELEASE_v3.0.1.md) · `qaguru/cm:v3.0.1` |
+| **Текущий релиз** | **v3.0.3** — [docs/RELEASE_v3.0.3.md](docs/RELEASE_v3.0.3.md) · `qaguru/cm:v3.0.3` |
 
 ## Роль в экосистеме
 
@@ -105,7 +105,7 @@ cm selenoid-ui start
 
 ## Установка
 
-**Предварительные условия:** Docker Engine **29.x** (API **1.55**, moby/moby client), доступ пользователя к `docker`, опубликованные релизы [qa-guru/selenoid](https://github.com/qa-guru/selenoid/releases) и [qa-guru/selenoid-ui](https://github.com/qa-guru/selenoid-ui/releases). Для сборки cm — Go **1.26.5**.
+**Предварительные условия:** Docker Engine **29.x** (API **1.55**, moby/moby client), доступ пользователя к `docker`, опубликованные релизы [qa-guru/selenoid](https://github.com/qa-guru/selenoid/releases) и [qa-guru/selenoid-ui](https://github.com/qa-guru/selenoid-ui/releases). Для сборки cm — Go **1.26.6**.
 
 Скачать бинарник из GitHub Releases или собрать локально (см. [Сборка](#сборка)):
 
@@ -150,8 +150,8 @@ Warm 4/4 sidecar (orchestrator `:9090`, hub `-warm-pool-url http://127.0.0.1:909
 ./cm selenoid start -f   # принудительно перекачать образы и бинарники
 ```
 
-Текущий релиз cm: **v3.0.1** — [release notes](docs/RELEASE_v3.0.1.md).  
-Предыдущий: [docs/RELEASE_v2.2.0.md](docs/RELEASE_v2.2.0.md). Docker: `qaguru/cm:v2.2.1`.
+Текущий релиз cm: **v3.0.3** — [release notes](docs/RELEASE_v3.0.3.md).  
+Предыдущий: [docs/RELEASE_v3.0.2.md](docs/RELEASE_v3.0.2.md). Docker: `qaguru/cm:v3.0.3`.
 
 ## Сборка
 

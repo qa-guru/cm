@@ -17,7 +17,7 @@ jobs:
   golang:
     runs-on: ubuntu-latest
     env:
-      GOTOOLCHAIN: go1.26.5+auto
+      GOTOOLCHAIN: go1.26.6+auto
     outputs:
       release_version: ${{ steps.release_meta.outputs.release_version }}
     steps:

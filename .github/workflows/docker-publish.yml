@@ -16,7 +16,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     env:
-      GOTOOLCHAIN: go1.26.5+auto
+      GOTOOLCHAIN: go1.26.6+auto
     steps:
       - uses: actions/checkout@v7
 
