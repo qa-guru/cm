@@ -98,40 +98,6 @@ services:
     networks:
       - selenoid-warm
 
-  hot-chrome-1:
-    profiles: ["hot"]
-    image: qaguru/webdriver-chrome:149
-    container_name: hot-chrome-1
-    restart: unless-stopped
-    environment:
-      WARM_SLOT_ID: pool-hot-chrome-1
-      WARM_SESSION_ID: pool-hot-chrome-1
-      ENABLE_VNC: "true"
-    ports:
-      - "127.0.0.1:16442:4444"
-    shm_size: "2gb"
-    tmpfs:
-      - /tmp:size=512m
-    networks:
-      - selenoid-warm
-
-  hot-pw-1:
-    profiles: ["hot"]
-    image: qaguru/playwright-chromium:1.61.1
-    container_name: hot-pw-1
-    restart: unless-stopped
-    environment:
-      WARM_SLOT_ID: pool-hot-pw-1
-      WARM_SESSION_ID: pool-hot-pw-1
-      ENABLE_VNC: "true"
-    ports:
-      - "127.0.0.1:16443:3000"
-    shm_size: "2gb"
-    tmpfs:
-      - /tmp:size=512m
-    networks:
-      - selenoid-warm
-
   orchestrator:
     image: qaguru/selenoid-pool:min
     container_name: selenoid-pool

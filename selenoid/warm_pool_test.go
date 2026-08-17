@@ -55,15 +55,11 @@ func TestWarmPoolEmbedHasNoBuildAndHotProfile(t *testing.T) {
 	assert.Contains(t, text, "127.0.0.1:9090:9090")
 	assert.Contains(t, text, "warm-chrome-1")
 	assert.Contains(t, text, "hot-chrome-min-1")
-	assert.Contains(t, text, "hot-chrome-1")
-	assert.Contains(t, text, "hot-pw-1")
 
 	cfg, err := warmPoolFS.ReadFile("data/warm-pool/config.yaml")
 	assert.NoError(t, err)
 	assert.Contains(t, string(cfg), "pool-chrome-1")
 	assert.Contains(t, string(cfg), "pool-hot-chrome-min-1")
-	assert.Contains(t, string(cfg), "pool-hot-chrome-1")
-	assert.Contains(t, string(cfg), "pool-hot-pw-1")
 	assert.Contains(t, string(cfg), "pool: hot")
 }
 
