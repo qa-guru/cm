@@ -65,7 +65,7 @@ cm selenoid start
     ├── docker pull qaguru/webdriver-chrome + qaguru/playwright-*
     └── запускает контейнер hub
 
-cm selenoid start --warm-pool
+cm selenoid start --pool          # alias: --warm-pool
     ├── то же, что start
     ├── docker compose: warm 4/4 + orchestrator :9090
     └── hub: -warm-pool-url http://127.0.0.1:9090  (host network)
@@ -87,6 +87,7 @@ cm selenoid-ui start
 | **cm** (этот) | [github.com/qa-guru/cm](https://github.com/qa-guru/cm) | Установщик |
 | browser-image | [github.com/qa-guru/browser-image](https://github.com/qa-guru/browser-image) | Docker browser nodes |
 | selenoid-tests | [github.com/qa-guru/selenoid-tests](https://github.com/qa-guru/selenoid-tests) | E2e/integration ethalon |
+| selenoid-pool | [github.com/qa-guru/selenoid-pool](https://github.com/qa-guru/selenoid-pool) | Warm/hot sidecar |
 | Docker Hub | [hub.docker.com/u/qaguru](https://hub.docker.com/u/qaguru) | Образы `qaguru/*` |
 
 ## browsers.json — SSOT (Docker)
@@ -124,7 +125,8 @@ sudo mkdir -p /opt/selenoid
 Warm 4/4 sidecar (orchestrator `:9090`, hub `-warm-pool-url http://127.0.0.1:9090`):
 
 ```bash
-./cm selenoid start --warm-pool
+./cm selenoid start --pool
+# alias: --warm-pool
 # hot 2/2, same orchestrator (not a third binary):
 ./cm selenoid start --hot-pool
 ```
@@ -168,8 +170,9 @@ go build -o cm .
 | `-c, --config-dir` | Каталог данных (default: **`/opt/selenoid`**) |
 | `-f, --force` | Перекачать образы и бинарники |
 | `-n, --no-download` | Только записать `browsers.json`, без `docker pull` |
-| `--warm-pool` | Sidecar [selenoid-warm-pool](https://github.com/qa-guru/selenoid-warm-pool): warm 4/4 + orchestrator; hub `-warm-pool-url http://127.0.0.1:9090` |
-| `--hot-pool` | Compose profile `hot` (2/2 `-min`); тот же оркестратор, implies `--warm-pool` |
+| `--pool` | Sidecar [selenoid-pool](https://github.com/qa-guru/selenoid-pool): warm 4/4 + orchestrator; hub `-warm-pool-url http://127.0.0.1:9090` |
+| `--warm-pool` | Alias for `--pool` |
+| `--hot-pool` | Compose profile `hot` (2/2 `-min`); тот же оркестратор, implies `--pool` |
 
 Флаги `--browsers`, `--browser-env`, `--drivers-info` — только для режима `--use-drivers`; `--drivers-info` обязателен (собственный каталог chromedriver/geckodriver).
 
@@ -189,7 +192,7 @@ go build -o cm .
   bin/selenoid-ui
   video/
   logs/
-  warm-pool/          # только при --warm-pool / --hot-pool
+  warm-pool/          # только при --pool / --warm-pool / --hot-pool
     docker-compose.yml
     config.yaml
 ```

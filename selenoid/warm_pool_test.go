@@ -40,6 +40,9 @@ func TestAppendWarmPoolHubArgs(t *testing.T) {
 
 	already := []string{"-warm-pool-url", "http://example.invalid:1"}
 	assert.Equal(t, already, appendWarmPoolHubArgs(already))
+
+	aliased := []string{"-pool-url", "http://example.invalid:1"}
+	assert.Equal(t, aliased, appendWarmPoolHubArgs(aliased))
 }
 
 func TestWarmPoolEmbedHasNoBuildAndHotProfile(t *testing.T) {
@@ -47,7 +50,7 @@ func TestWarmPoolEmbedHasNoBuildAndHotProfile(t *testing.T) {
 	assert.NoError(t, err)
 	text := string(compose)
 	assert.NotRegexp(t, `(?m)^\s+build:`, text)
-	assert.Contains(t, text, "qaguru/selenoid-warm-pool:min")
+	assert.Contains(t, text, "qaguru/selenoid-pool:min")
 	assert.Contains(t, text, `profiles: ["hot"]`)
 	assert.Contains(t, text, "127.0.0.1:9090:9090")
 	assert.Contains(t, text, "warm-chrome-1")

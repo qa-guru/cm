@@ -35,7 +35,7 @@ type LifecycleConfig struct {
 	SelenoidBinary   string
 	SelenoidUIBinary string
 
-	// Warm/hot sidecar (qa-guru/selenoid-warm-pool). --hot-pool implies warm.
+	// Warm/hot sidecar (qa-guru/selenoid-pool). --hot-pool implies --pool / --warm-pool.
 	WarmPool bool
 	HotPool  bool
 

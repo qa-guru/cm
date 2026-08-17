@@ -60,7 +60,7 @@ func warmPoolComposeDownArgs() []string {
 }
 
 func appendWarmPoolHubArgs(cmd []string) []string {
-	if contains(cmd, "-warm-pool-url") {
+	if contains(cmd, "-warm-pool-url") || contains(cmd, "-pool-url") {
 		return cmd
 	}
 	return append(cmd, "-warm-pool-url", WarmPoolURL)

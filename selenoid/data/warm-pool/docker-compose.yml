@@ -1,6 +1,6 @@
-# Embedded by qa-guru/cm for `cm selenoid start --warm-pool`.
-# Snapshot of selenoid-warm-pool docker-compose.hub.yml: warm 4/4 + orchestrator.
-# Pull published image qaguru/selenoid-warm-pool:min (no local Dockerfile).
+# Embedded by qa-guru/cm for `cm selenoid start --pool` (alias `--warm-pool`).
+# Snapshot of selenoid-pool docker-compose.hub.yml: warm 4/4 + orchestrator.
+# Pull published image qaguru/selenoid-pool:min (no local Dockerfile).
 # `--hot-pool` → compose profile `hot` (same orchestrator, not a third binary).
 name: selenoid-warm
 services:
@@ -99,8 +99,8 @@ services:
       - selenoid-warm
 
   orchestrator:
-    image: qaguru/selenoid-warm-pool:min
-    container_name: selenoid-warm-pool
+    image: qaguru/selenoid-pool:min
+    container_name: selenoid-pool
     restart: unless-stopped
     ports:
       - "127.0.0.1:9090:9090"
@@ -111,7 +111,9 @@ services:
     volumes:
       - ./config.yaml:/config/config.yaml:ro
     networks:
-      - selenoid-warm
+      selenoid-warm:
+        aliases:
+          - selenoid-warm-pool
     depends_on:
       - warm-chrome-1
       - warm-chrome-2

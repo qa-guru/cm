@@ -34,6 +34,7 @@ var (
 	selenoidBinary   string
 	selenoidUIBinary string
 	warmPool         bool
+	pool             bool
 	hotPool          bool
 )
 
@@ -188,7 +189,8 @@ func initFlags() {
 		selenoidCleanupCmd,
 	} {
 		c.Flags().BoolVar(&warmPool, "warm-pool", false, "start warm 4/4 sidecar and pass hub -warm-pool-url http://127.0.0.1:9090")
-		c.Flags().BoolVar(&hotPool, "hot-pool", false, "start hot 2/2 slots (compose profile hot, same orchestrator; implies --warm-pool)")
+		c.Flags().BoolVar(&pool, "pool", false, "alias for --warm-pool")
+		c.Flags().BoolVar(&hotPool, "hot-pool", false, "start hot 2/2 slots (compose profile hot, same orchestrator; implies --warm-pool / --pool)")
 	}
 }
 
@@ -215,7 +217,7 @@ func createLifecycle(configDir string, port uint16) (*selenoid.Lifecycle, error)
 		SelenoidBinary:   selenoidBinary,
 		SelenoidUIBinary: selenoidUIBinary,
 
-		WarmPool: warmPool,
+		WarmPool: warmPool || pool,
 		HotPool:  hotPool,
 
 		DriversInfoUrl: driversInfoUrl,
