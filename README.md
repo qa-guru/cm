@@ -65,7 +65,7 @@ cm selenoid start
     ├── docker pull qaguru/webdriver-chrome + qaguru/playwright-*
     └── запускает контейнер hub
 
-cm selenoid start --pool          # alias: --warm-pool
+cm selenoid start --warm-pool     # alias: --pool
     ├── то же, что start
     ├── docker compose: warm 4/4 + orchestrator :9090
     └── hub: -warm-pool-url http://127.0.0.1:9090  (host network)
@@ -105,39 +105,41 @@ cm selenoid-ui start
 
 ## Установка
 
-**Предварительные условия:** Docker Engine **29.x** (API **1.55**, moby/moby client), доступ пользователя к `docker`, опубликованные релизы [qa-guru/selenoid](https://github.com/qa-guru/selenoid/releases) и [qa-guru/selenoid-ui](https://github.com/qa-guru/selenoid-ui/releases). Для сборки cm — Go **1.26.6**.
+**Предварительные условия:** Docker Engine **29.x** (API **1.55**, moby/moby client), доступ пользователя к `docker`, опубликованные релизы [qa-guru/selenoid](https://github.com/qa-guru/selenoid/releases) и [qa-guru/selenoid-ui](https://github.com/qa-guru/selenoid-ui/releases). Для сборки cm — Go **1.26.6**. Warm/hot sidecar рассчитан на **Linux + host network**. На Docker Desktop (Mac/Windows) слоты могут не отдать loopback `127.0.0.1:14441` — сессии уйдут в cold.
 
 Скачать бинарник из GitHub Releases или собрать локально (см. [Сборка](#сборка)):
 
 ```bash
+# Linux
 curl -sL https://github.com/qa-guru/cm/releases/latest/download/cm_linux_amd64 -o cm
+# macOS Apple Silicon
+# curl -sL https://github.com/qa-guru/cm/releases/latest/download/cm_darwin_arm64 -o cm
 chmod +x cm
 ```
 
-Запуск (по умолчанию каталог **`/opt/selenoid`**, как на prod):
+Локально (без sudo) — свой каталог:
 
 ```bash
-sudo mkdir -p /opt/selenoid
-./cm selenoid start
-./cm selenoid-ui start
+./cm selenoid start -c "$HOME/selenoid"
+./cm selenoid-ui start -c "$HOME/selenoid"
 ```
 
 Warm 4/4 sidecar (orchestrator `:9090`, hub `-warm-pool-url http://127.0.0.1:9090`):
 
 ```bash
-./cm selenoid start --pool
-# alias: --warm-pool
-# hot 2/2, same orchestrator (not a third binary):
-./cm selenoid start --hot-pool
+./cm selenoid start -c "$HOME/selenoid" --warm-pool
+# alias: --pool
+./cm selenoid start -c "$HOME/selenoid" --hot-pool   # то же + hot 2/2
 ```
 
-Без флага — как раньше: только cold hub. `cm selenoid stop` гасит sidecar, если его поднял этот cm (маркер в `-c …/warm-pool`).
+Без флага — только cold hub. `cm selenoid stop` гасит sidecar, если его поднял этот cm (маркер в `-c …/warm-pool`).
 
-Локально без прав на `/opt` — свой каталог:
+Prod-каталог по умолчанию — **`/opt/selenoid`**:
 
 ```bash
-./cm selenoid start -c "$HOME/selenoid"
-./cm selenoid-ui start -c "$HOME/selenoid"
+sudo mkdir -p /opt/selenoid
+./cm selenoid start
+./cm selenoid-ui start
 ```
 
 `cm selenoid start` передаёт hub `DOCKER_API_VERSION=1.55`.
@@ -170,9 +172,9 @@ go build -o cm .
 | `-c, --config-dir` | Каталог данных (default: **`/opt/selenoid`**) |
 | `-f, --force` | Перекачать образы и бинарники |
 | `-n, --no-download` | Только записать `browsers.json`, без `docker pull` |
-| `--pool` | Sidecar [selenoid-pool](https://github.com/qa-guru/selenoid-pool): warm 4/4 + orchestrator; hub `-warm-pool-url http://127.0.0.1:9090` |
-| `--warm-pool` | Alias for `--pool` |
-| `--hot-pool` | Compose profile `hot` (2/2 `-min`); тот же оркестратор, implies `--pool` |
+| `--warm-pool` | Sidecar [selenoid-pool](https://github.com/qa-guru/selenoid-pool): warm 4/4 + orchestrator; hub `-warm-pool-url http://127.0.0.1:9090` |
+| `--pool` | Alias for `--warm-pool` |
+| `--hot-pool` | Compose profile `hot` (2/2 `-min`); тот же оркестратор, implies `--warm-pool` |
 
 Флаги `--browsers`, `--browser-env`, `--drivers-info` — только для режима `--use-drivers`; `--drivers-info` обязателен (собственный каталог chromedriver/geckodriver).
 
@@ -192,7 +194,13 @@ go build -o cm .
   bin/selenoid-ui
   video/
   logs/
-  warm-pool/          # только при --pool / --warm-pool / --hot-pool
+  warm-pool/          # только при --warm-pool / --pool / --hot-pool
     docker-compose.yml
     config.yaml
 ```
+
+## Свои тесты
+
+**Warm** — Chrome WebDriver без video/VNC/HAR: обычный remote `http://127.0.0.1:4444/wd/hub`. Тест не менять; hub сам делает container-reuse. Firefox / Playwright / video / VNC / HAR остаются cold.
+
+**Hot** — не drop-in. Слот помечается `POST /pool/lease`, клиент **attach** к уже открытому UUID (хелпер [jenkins-overlay](https://github.com/qa-guru/selenoid-pool/tree/main/jenkins-overlay)). `ensure.sh` нет. Наш Jenkins держит `hotJunitDaemon` (`:17890`) через sync-джобу — это не часть cm.

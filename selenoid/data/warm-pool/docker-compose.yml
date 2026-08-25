@@ -1,4 +1,4 @@
-# Embedded by qa-guru/cm for `cm selenoid start --pool` (alias `--warm-pool`).
+# Embedded by qa-guru/cm for `cm selenoid start --warm-pool` (alias `--pool`).
 # Snapshot of selenoid-pool docker-compose.hub.yml: warm 4/4 + orchestrator.
 # Pull published image qaguru/selenoid-pool:min (no local Dockerfile).
 # `--hot-pool` → compose profile `hot` (same orchestrator, not a third binary).
