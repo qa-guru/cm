@@ -20,9 +20,8 @@ func TestEmbeddedBrowsersJSON(t *testing.T) {
 		assert.Truef(t, ok, "embedded catalog missing %q", name)
 		assert.NotEmptyf(t, browser.Default, "%s.default", name)
 		assert.NotEmptyf(t, browser.Versions, "%s.versions", name)
+		assert.Containsf(t, browser.Versions, browser.Default, "%s.default %q missing from versions", name, browser.Default)
 	}
-	assert.Equal(t, "149.0", cfg["chrome"].Default)
-	assert.Equal(t, "1.61.1", cfg["playwright-chromium"].Default)
 
 	android, ok := cfg["android"]
 	assert.True(t, ok, "embedded catalog missing android")
@@ -42,7 +41,8 @@ func TestConfigureEmbeddedBrowsersWritesConfig(t *testing.T) {
 	cfg, err := c.configureEmbeddedBrowsers()
 	assert.NoError(t, err)
 	assert.NotNil(t, cfg)
-	assert.Equal(t, "149.0", (*cfg)["chrome"].Default)
+	chrome := (*cfg)["chrome"]
+	assert.Contains(t, chrome.Versions, chrome.Default)
 
 	written, err := os.ReadFile(filepath.Join(dir, "browsers.json"))
 	assert.NoError(t, err)
