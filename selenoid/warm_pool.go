@@ -15,7 +15,7 @@ import (
 const (
 	WarmPoolURL            = "http://127.0.0.1:9090"
 	warmPoolHealthURL      = WarmPoolURL + "/health"
-	warmPoolComposeProject = "selenoid-warm"
+	warmPoolComposeProject = "selenoid-pool"
 	warmPoolDirName        = "warm-pool"
 	warmPoolManagedMarker  = ".cm-managed"
 	warmPoolComposeFile    = "docker-compose.yml"

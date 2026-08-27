@@ -21,11 +21,11 @@ func TestPoolEnabled(t *testing.T) {
 
 func TestWarmPoolComposeArgs(t *testing.T) {
 	warm := warmPoolComposeUpArgs(false)
-	assert.Equal(t, []string{"-p", "selenoid-warm", "-f", "docker-compose.yml", "up", "-d"}, warm)
+	assert.Equal(t, []string{"-p", "selenoid-pool", "-f", "docker-compose.yml", "up", "-d"}, warm)
 	assert.NotContains(t, warm, "--profile")
 
 	hot := warmPoolComposeUpArgs(true)
-	assert.Equal(t, []string{"-p", "selenoid-warm", "-f", "docker-compose.yml", "--profile", "hot", "up", "-d"}, hot)
+	assert.Equal(t, []string{"-p", "selenoid-pool", "-f", "docker-compose.yml", "--profile", "hot", "up", "-d"}, hot)
 
 	down := warmPoolComposeDownArgs()
 	assert.Contains(t, down, "down")
@@ -52,6 +52,8 @@ func TestWarmPoolEmbedHasNoBuildAndHotProfile(t *testing.T) {
 	assert.NotRegexp(t, `(?m)^\s+build:`, text)
 	assert.Contains(t, text, "qaguru/selenoid-pool:min")
 	assert.Contains(t, text, `profiles: ["hot"]`)
+	assert.Contains(t, text, "name: selenoid-reuse")
+	assert.NotContains(t, text, "name: selenoid-warm")
 	assert.Contains(t, text, "127.0.0.1:9090:9090")
 	assert.Contains(t, text, "warm-chrome-1")
 	assert.Contains(t, text, "hot-chrome-min-1")

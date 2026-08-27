@@ -2,6 +2,7 @@
 # Snapshot of selenoid-pool docker-compose.hub.yml: warm 4/4 + orchestrator.
 # Pull published image qaguru/selenoid-pool:min (no local Dockerfile).
 # `--hot-pool` → compose profile `hot` (same orchestrator, not a third binary).
+# Docker network `selenoid-reuse` (warm+hot slots + orchestrator). Cold hub browsers: `selenoid`.
 name: selenoid-pool
 services:
   warm-chrome-1:
@@ -18,7 +19,7 @@ services:
     tmpfs:
       - /tmp:size=512m
     networks:
-      - selenoid-warm
+      - selenoid-reuse
 
   warm-chrome-2:
     image: qaguru/webdriver-chrome:149-min
@@ -33,7 +34,7 @@ services:
     tmpfs:
       - /tmp:size=512m
     networks:
-      - selenoid-warm
+      - selenoid-reuse
 
   warm-pw-1:
     image: qaguru/playwright-chromium:1.61.1
@@ -49,7 +50,7 @@ services:
     tmpfs:
       - /tmp:size=512m
     networks:
-      - selenoid-warm
+      - selenoid-reuse
 
   warm-pw-min-1:
     image: qaguru/playwright-chromium:1.61.1-min
@@ -64,7 +65,7 @@ services:
     tmpfs:
       - /tmp:size=512m
     networks:
-      - selenoid-warm
+      - selenoid-reuse
 
   hot-chrome-min-1:
     profiles: ["hot"]
@@ -80,7 +81,7 @@ services:
     tmpfs:
       - /tmp:size=512m
     networks:
-      - selenoid-warm
+      - selenoid-reuse
 
   hot-pw-min-1:
     profiles: ["hot"]
@@ -96,7 +97,7 @@ services:
     tmpfs:
       - /tmp:size=512m
     networks:
-      - selenoid-warm
+      - selenoid-reuse
 
   orchestrator:
     image: qaguru/selenoid-pool:min
@@ -111,7 +112,7 @@ services:
     volumes:
       - ./config.yaml:/config/config.yaml:ro
     networks:
-      - selenoid-warm
+      - selenoid-reuse
     depends_on:
       - warm-chrome-1
       - warm-chrome-2
@@ -119,6 +120,6 @@ services:
       - warm-pw-min-1
 
 networks:
-  selenoid-warm:
-    name: selenoid-warm
+  selenoid-reuse:
+    name: selenoid-reuse
     driver: bridge
