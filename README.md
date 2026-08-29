@@ -105,7 +105,7 @@ cm selenoid-ui start
 
 ## Установка
 
-**Предварительные условия:** Docker Engine **29.x** (API **1.55**, moby/moby client), доступ пользователя к `docker`, опубликованные релизы [qa-guru/selenoid](https://github.com/qa-guru/selenoid/releases) и [qa-guru/selenoid-ui](https://github.com/qa-guru/selenoid-ui/releases). Для сборки cm — Go **1.26.6**. Warm/hot sidecar рассчитан на **Linux + host network**. На Docker Desktop (Mac/Windows) слоты могут не отдать loopback `127.0.0.1:14441` — сессии уйдут в cold.
+**Предварительные условия:** Docker Engine **29.x** (API **1.55**, moby/moby client), доступ пользователя к `docker`, опубликованные релизы [qa-guru/selenoid](https://github.com/qa-guru/selenoid/releases) и [qa-guru/selenoid-ui](https://github.com/qa-guru/selenoid-ui/releases). Для сборки cm — Go **1.27.0**. Warm/hot sidecar рассчитан на **Linux + host network**. На Docker Desktop (Mac/Windows) слоты могут не отдать loopback `127.0.0.1:14441` — сессии уйдут в cold.
 
 Скачать бинарник из GitHub Releases или собрать локально (см. [Сборка](#сборка)):
 
