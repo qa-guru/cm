@@ -45,7 +45,7 @@ const (
 	selenoidUIContainerName = "selenoid-ui"
 	overrideHome            = "OVERRIDE_HOME"
 	dockerApiVersion        = "DOCKER_API_VERSION"
-	selenoidDockerAPI       = "1.45" // canon: Engine 26.1.x / prod Debian 10
+	selenoidDockerAPI       = "1.55" // canon: Engine 29.x / API 1.55 (DOCKER-CANON)
 )
 
 type SelenoidConfig map[string]config.Versions
