@@ -7,9 +7,9 @@
 | Поле | Значение |
 |------|----------|
 | Линия | Selenoid 3 |
-| Stack semver | cm cut **v3.0.4** (latest tag; prod pin — deploy-чат) |
-| Docker API | TBD (paired с hub) |
-| Docker Engine | TBD (prod: Debian 12 · Docker 29.6) |
+| Stack semver | cm cut **v3.0.5** (latest tag; prod pin — deploy-чат) |
+| Docker API | **1.55** (`DOCKER_API_VERSION` в hub-контейнер) |
+| Docker Engine | 29.x (prod: Debian 12 · Docker 29.6) |
 | Go | 1.27.0+ |
 | Go (примечание) | Факт `go.mod` + `toolchain go1.27.0` |
 | Prod | [selenoid.qa.guru](https://selenoid.qa.guru) |
